@@ -1,37 +1,35 @@
+//src/components/Sidebar.jsx
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-
-// 🚨 ¡ERROR ARREGLADO AQUÍ!
-// La ruta debe ser './Sidebar.css' (misma carpeta)
-// y no '../styles/Sidebar'.
-import './Sidebar.css'; 
+import './Sidebar.css'; // Asumiendo que este archivo SÍ existe ahora en /components/
 
 export default function Sidebar({ isOpen, onClose }) {
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    // Limpia el token de autenticación
-    localStorage.removeItem("authToken");
-    localStorage.removeItem("userName");
-    localStorage.removeItem("userRole");
+    
+    // 🚨 ¡AQUÍ ESTÁ TU MENSAJE!
+    // Usamos console.warn() para que se vea amarillo y destaque.
+    console.warn("🔒 SESIÓN CERRADA: Token de autenticación destruido.");
+    
+    // Borra TODO el localStorage (authToken, userName, userRole, etc.)
+    localStorage.clear();
     
     // Cierra el sidebar
     onClose();
     
-    // Redirige a la página de inicio
-    navigate('/');
+    // Envía al home
+    navigate('/'); 
   };
 
   return (
     <>
-      {/* Capa oscura de fondo (Overlay) */}
       <div 
         className={`sidebar-overlay ${isOpen ? 'open' : ''}`} 
         onClick={onClose}
         aria-hidden={!isOpen}
       />
       
-      {/* El Panel Lateral */}
       <nav 
         className={`sidebar ${isOpen ? 'open' : ''}`}
         aria-label="Menú principal"
@@ -41,10 +39,8 @@ export default function Sidebar({ isOpen, onClose }) {
         <h2>Menú Principal</h2>
         
         <Link to="/dashboard" onClick={onClose}>Mi Perfil</Link>
-        <Link to="/dashboard/cursos" onClick={onClose}>Mis Cursos</Link>
-        <Link to="/dashboard/ajustes" onClick={onClose}>Ajustes</Link>
+        <Link to="/dashboard" onClick={onClose}>Ajustes</Link>
         
-        {/* El botón de logout se alinea al fondo */}
         <button onClick={handleLogout} className="btn-logout">
           Cerrar sesión
         </button>
@@ -52,3 +48,4 @@ export default function Sidebar({ isOpen, onClose }) {
     </>
   );
 }
+

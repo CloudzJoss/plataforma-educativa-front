@@ -2,11 +2,12 @@
 import "./App.css";
 import { Routes, Route } from 'react-router-dom'; 
 
-// Estas importaciones AHORA SÍ funcionarán
+// 1. 🚨 CORREGIMOS LAS RUTAS DE IMPORTACIÓN
 import HomePage from "./pages/HomePage"; 
 import Dashboard from "./pages/Dashboard"; 
 
-// import ProtectedRoute from "./components/ProtectedRoute"; 
+// 2. 🚨 IMPORTAMOS EL GUARDIÁN DESDE SU CARPETA
+import ProtectedRoute from "./security/ProtectedRoute"; 
 
 function App() {
   return (
@@ -18,10 +19,15 @@ function App() {
         element={<HomePage />} 
       />
 
-      {/* RUTA DASHBOARD */}
+      {/* RUTA PROTEGIDA */}
       <Route 
         path="/dashboard" 
-        element={<Dashboard />} 
+        element={
+          // 3. 🚨 ENVOLVEMOS EL DASHBOARD CON EL GUARDIÁN
+          <ProtectedRoute>
+            <Dashboard />
+          </ProtectedRoute>
+        } 
       />
       
     </Routes>
@@ -29,3 +35,4 @@ function App() {
 }
 
 export default App;
+

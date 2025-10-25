@@ -1,15 +1,30 @@
+//src/App.js
 import "./App.css";
-import Header from "./components/Header";
-import Hero from "./components/Hero";
-import Info from "./components/Info";
+import { Routes, Route } from 'react-router-dom'; 
+
+// Estas importaciones AHORA SÍ funcionarán
+import HomePage from "./pages/HomePage"; 
+import Dashboard from "./pages/Dashboard"; 
+
+// import ProtectedRoute from "./components/ProtectedRoute"; 
 
 function App() {
   return (
-    <>
-      <Header />
-      <Hero />
-      <Info />
-    </>
+    <Routes> 
+      
+      {/* RUTA PÚBLICA */}
+      <Route 
+        path="/" 
+        element={<HomePage />} 
+      />
+
+      {/* RUTA DASHBOARD */}
+      <Route 
+        path="/dashboard" 
+        element={<Dashboard />} 
+      />
+      
+    </Routes>
   );
 }
 

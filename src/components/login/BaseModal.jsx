@@ -1,7 +1,7 @@
-// src/components/BaseModal.jsx
+// src/components/login/BaseModal.jsx
 import React, { useEffect, useRef, useState } from "react";
 import LoginModal from "./LoginModal";
-import RegisterModal from "./RegisterModal";
+import RegisterModal from "./RegisterModal.jsx";
 import "../../styles/login/LoginModal.css";
 
 export default function BaseModal({ onClose }) {

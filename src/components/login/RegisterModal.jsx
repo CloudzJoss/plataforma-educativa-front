@@ -1,4 +1,4 @@
-// src/components/RegisterModal.jsx
+// src/components/login/RegisterModal.jsx
 import React, { useEffect, useRef } from "react";
 
 export default function RegisterModal({ onClose, openLogin }) {

@@ -106,13 +106,6 @@ export default function LoginModal({ onClose, openRegister }) {
           </button>
         </div>
       </form>
-
-      <p className="toggle-line">
-        ¿No tienes cuenta?{" "}
-        <button type="button" className="link-button" onClick={openRegister}>
-          Crear cuenta
-        </button>
-      </p>
     </>
   );
 }

@@ -1,17 +1,53 @@
-  //src/App.js
+// src/App.js
 import { useRoutes } from 'react-router-dom';
-// 1. Importa la configuración de rutas
+import axios from 'axios';
 import routeConfig from './routeConfig.js'; 
-// 2. Importa tu CSS global
 import "./App.css"; 
+import { useEffect } from 'react'; 
+
+// --- LÓGICA DE LIMPIEZA MODIFICADA ---
+const checkAuthAndCleanup = async () => {
+  // 1. 🚨 CAMBIO: Ahora revisamos 'userRole' en lugar de 'authToken'
+  const role = localStorage.getItem('userRole');
+  
+  if (!role) return; // Si no hay rol, no hay sesión, nada que revisar.
+
+  try {
+    // 2. 🚨 CAMBIO: URL relativa (baseURL está en index.js)
+    const API_URL = "/api/usuarios/me"; 
+    
+    // 3. 🚨 ELIMINADO: 'token' y 'config' ya no son necesarios
+    // const token = localStorage.getItem('authToken');
+    // const config = { ... };
+      
+    // 4. 🚨 CAMBIO: Petición "limpia". El navegador envía la cookie.
+    await axios.get(API_URL); // <-- SIN 'config'
+    // Si la petición tiene éxito, la sesión de la cookie es válida. No hacemos nada.
+      
+  } catch (error) {
+    // 5. Si la cookie es inválida/expirada, el backend da 401/403
+    if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+      console.warn("Sesión de cookie expirada o inválida detectada. Limpiando localStorage.");
+      
+      // 6. 🚨 CAMBIO: Limpiamos los items de UI (authToken ya no existe)
+      // localStorage.removeItem('authToken'); // <-- ELIMINADO
+      localStorage.removeItem('userRole');
+      localStorage.removeItem('userName');
+        
+      window.location.reload(); 
+    }
+  }
+};
+
 
 function App() {
-  // 3. useRoutes genera el elemento a renderizar
-  const element = useRoutes(routeConfig); 
+    useEffect(() => {
+        checkAuthAndCleanup();
+    }, []); 
 
-  // 4. Renderiza el resultado
-  return element; 
+    const element = useRoutes(routeConfig); 
+
+    return element; 
 }
 
 export default App;
-

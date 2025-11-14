@@ -1,4 +1,6 @@
-/* El panel lateral.
+/* 
+/src/styles/Sidebar.css
+El panel lateral.
   Está fijo en la pantalla, posicionado fuera de la vista a la derecha (translateX(100%)).
   Tiene una transición suave para la propiedad 'transform'.
 */

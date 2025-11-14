@@ -3,31 +3,25 @@ import React from 'react';
 import { Navigate } from 'react-router-dom';
 
 export default function ProtectedRoute({ children }) {
-  
-  // 1. Revisa si tenemos un token
-  const token = localStorage.getItem("authToken");
+  
+  // 1. 🚨 CAMBIO: El 'token' ya no existe en localStorage
+  // const token = localStorage.getItem("authToken"); // <-- ELIMINADO
+  const role = localStorage.getItem("userRole"); 
 
-  // 2. 🚨 ¡NUEVO! Revisa qué rol tenemos
-  const role = localStorage.getItem("userRole");
+  // 2. 🚨 CAMBIO: La comprobación ahora se basa SÓLO en el rol
+  if (!role) {
+    // 3. Si NO hay rol, te bota (Autenticación)
+    console.error("⛔ ACCESO DENEGADO: No se encontró 'userRole' en localStorage. Redirigiendo al inicio.");
+    return <Navigate to="/" replace />;
+  }
 
-  if (!token) {
-    // 3. Si NO hay token, te bota (Autenticación)
-    console.error("⛔ ACCESO DENEGADO: No se encontró token. Redirigiendo al inicio.");
-    return <Navigate to="/" replace />;
-  }
+  // 4. Revisa si el rol es el correcto (Autorización de UI)
+  if (role !== "ADMINISTRADOR") {
+    // 5. Si hay rol, PERO no es Admin, te bota
+    console.error(`⛔ AUTORIZACIÓN DENEGADA: El rol '${role}' no tiene permisos para acceder a la gestión. Redirigiendo al inicio.`);
+    return <Navigate to="/" replace />;
+  }
 
-  // 4. 🚨 ¡NUEVO! Revisa si el rol es el correcto
-  if (role !== "ADMINISTRADOR") {
-    // 5. Si hay token, PERO el rol no es Admin, te bota (Autorización)
-    console.error(`⛔ AUTORIZACIÓN DENEGADA: El rol '${role}' no tiene permisos. Redirigiendo al inicio.`);
-    
-    // Opcional: Podríamos borrar el token aquí si quisiéramos ser más estrictos
-    // localStorage.clear(); 
-    
-    return <Navigate to="/" replace />;
-  }
-
-  // 6. Si SÍ hay token Y SÍ es Admin, muestra la página protegida
-  return children;
+  // 6. Si SÍ hay rol Y SÍ es Admin, muestra la página
+  return children;
 }
-

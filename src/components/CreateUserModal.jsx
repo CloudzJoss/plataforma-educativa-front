@@ -1,7 +1,10 @@
 //src/components/CreateUserModal.jsx
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
-import '../styles/CreateUserModal.css'; // Asumo que este archivo existe o lo crearás
+import '../styles/CreateUserModal.css';
+
+// ✅ URL CONSTANTE DEL BACKEND
+const BASE_URL = 'https://plataforma-edu-back-gpcsh9h7fddkfvfb.chilecentral-01.azurewebsites.net';
 
 export default function CreateUserModal({ isOpen, onClose, onUserCreated }) {
   // --- Estados Base ---
@@ -14,23 +17,19 @@ export default function CreateUserModal({ isOpen, onClose, onUserCreated }) {
   const nameInputRef = useRef(null); 
 
   // --- 1. 🚨 NUEVOS ESTADOS PARA PERFILES ---
-  // (Campos de Alumno)
   const [dniAlumno, setDniAlumno] = useState('');
   const [grado, setGrado] = useState(''); 
-  const [nivel, setNivel] = useState('SECUNDARIA'); // Valor por defecto
+  const [nivel, setNivel] = useState('SECUNDARIA');
 
-  // (Campos de Profesor)
   const [dniProfesor, setDniProfesor] = useState('');
   const [telefono, setTelefono] = useState('');
   const [experiencia, setExperiencia] = useState('');
-  // 'gradoAcademico' no es necesario según tu indicación
 
   // --- Limpiar formulario al abrir ---
   useEffect(() => {
     if (isOpen) {
       setNombre(''); setEmail(''); setPassword(''); setRol('ALUMNO');
       setError(null);
-      // Limpiar todos los campos de perfil
       setDniAlumno(''); setGrado(''); setNivel('SECUNDARIA');
       setDniProfesor(''); setTelefono(''); setExperiencia('');
       
@@ -38,9 +37,7 @@ export default function CreateUserModal({ isOpen, onClose, onUserCreated }) {
     }
   }, [isOpen]);
 
-  if (!isOpen) {
-    return null;
-  }
+  if (!isOpen) return null;
 
   // --- handleSubmit (MODIFICADO) ---
   const handleSubmit = async (e) => {
@@ -48,11 +45,9 @@ export default function CreateUserModal({ isOpen, onClose, onUserCreated }) {
     setLoading(true);
     setError(null);
 
-    const API_URL = `/api/usuarios/crear`;
+    // ✅ USAMOS LA URL DE AZURE
+    const API_URL = `${BASE_URL}/api/usuarios/crear`;
     
-    // --- 2. 🚨 PAYLOAD ACTUALIZADO ---
-    // Construye el payload basado en el rol seleccionado
-    // Esto debe coincidir con el DTO 'UsuarioInputDTO' del backend
     const payload = {
       nombre: nombre.trim(),
       email: email.trim(),
@@ -80,13 +75,11 @@ export default function CreateUserModal({ isOpen, onClose, onUserCreated }) {
         return;
       }
       payload.dniProfesor = dniProfesor.trim();
-      // Campos opcionales de profesor
       if (telefono.trim()) payload.telefono = telefono.trim();
       if (experiencia.trim()) payload.experiencia = experiencia.trim();
-      // 'gradoAcademico' no se envía
     }
     
-    // --- Validación Base (Admin o campos comunes) ---
+    // --- Validación Base ---
     if (!payload.nombre || !payload.email || !payload.password) {
       setError('Nombre, Email y Contraseña son obligatorios.');
       setLoading(false);
@@ -96,10 +89,11 @@ export default function CreateUserModal({ isOpen, onClose, onUserCreated }) {
     console.log("Enviando payload:", payload);
 
     try {
-      // La petición 'limpia' (sin 'config') envía la cookie HttpOnly
-      const response = await axios.post(API_URL, payload); 
+      // ✅ Axios llamando a la URL correcta con credenciales
+      const response = await axios.post(API_URL, payload, {
+          withCredentials: true 
+      }); 
       
-      // 3. 🚨 CAMBIO: Pasamos el DTO de respuesta (UsuarioOutputDTO)
       onUserCreated(response.data);
       onClose(); 
 
@@ -109,7 +103,6 @@ export default function CreateUserModal({ isOpen, onClose, onUserCreated }) {
          if (err.response.status === 401 || err.response.status === 403) {
            setError("No tienes permisos para crear usuarios.");
          } else if (err.response.data && err.response.data.message) { 
-           // Si el backend envía un error de ValidacionException
            setError(err.response.data.message);
          } else if (err.response.data && typeof err.response.data === 'string' && err.response.data.includes("El correo electrónico ya está en uso")) {
            setError("El correo electrónico ya está registrado.");
@@ -124,7 +117,7 @@ export default function CreateUserModal({ isOpen, onClose, onUserCreated }) {
     }
   };
 
-  // --- 4. 🚨 RENDERIZADO ACTUALIZADO ---
+  // --- RENDERIZADO (Igual que antes) ---
   return (
     <div className="modal-overlay" onClick={(e) => e.currentTarget === e.target && onClose()}>
       <div className="modal fixed-modal" role="dialog" aria-modal="true" aria-labelledby="create-user-title">
@@ -133,7 +126,6 @@ export default function CreateUserModal({ isOpen, onClose, onUserCreated }) {
           <h2 id="create-user-title" className="modal-title">Crear Nuevo Usuario</h2>
 
           <form className="auth-form" onSubmit={handleSubmit} noValidate>
-            {/* --- Campos Comunes --- */}
             <label> Nombre Completo* <input ref={nameInputRef} type="text" value={nombre} onChange={(e) => setNombre(e.target.value)} required /> </label>
             <label> Email* <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required /> </label>
             <label> Contraseña* <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required /> </label>
@@ -141,11 +133,10 @@ export default function CreateUserModal({ isOpen, onClose, onUserCreated }) {
               <select value={rol} onChange={(e) => setRol(e.target.value)} required>
                 <option value="ALUMNO">Alumno</option>
                 <option value="PROFESOR">Profesor</option>
-                <option value="ADMIN">Admin</option> {/* Tu Enum usa ADMIN */}
+                <option value="ADMIN">Admin</option> 
               </select>
             </label>
 
-            {/* --- Campos Condicionales para ALUMNO --- */}
             {rol === 'ALUMNO' && (
               <>
                 <label> DNI (Alumno)* <input type="text" value={dniAlumno} onChange={(e) => setDniAlumno(e.target.value)} required /> </label>
@@ -160,7 +151,6 @@ export default function CreateUserModal({ isOpen, onClose, onUserCreated }) {
               </>
             )}
 
-            {/* --- Campos Condicionales para PROFESOR --- */}
             {rol === 'PROFESOR' && (
               <>
                 <label> DNI (Profesor)* <input type="text" value={dniProfesor} onChange={(e) => setDniProfesor(e.target.value)} required /> </label>
@@ -169,8 +159,6 @@ export default function CreateUserModal({ isOpen, onClose, onUserCreated }) {
               </>
             )}
             
-            {/* El rol ADMIN no tiene campos extra */}
-
             {error && <p className="auth-error" style={{ color: 'red', marginTop: '10px' }}>{error}</p>}
 
             <div className="modal-actions">

@@ -31,7 +31,7 @@ export default function GestionSecciones() {
         setLoading(true);
         setError(null);
         try {
-            const response = await axios.get('http://localhost:8081/api/secciones', {
+            const response = await axios.get('https://plataforma-edu-back-gpcsh9h7fddkfvfb.chilecentral-01.azurewebsites.net/api/secciones', {
                 withCredentials: true
             });
             console.log('Secciones cargadas:', response.data);

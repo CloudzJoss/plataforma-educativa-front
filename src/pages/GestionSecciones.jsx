@@ -5,6 +5,9 @@ import CreateSeccionModal from '../components/CreateSeccionModal';
 import EditSeccionModal from '../components/EditSeccionModal';
 import '../styles/GestionUsuarios.css'; // Reutilizamos los mismos estilos
 
+// ✅ URL CONSTANTE DEL BACKEND
+const BASE_URL = 'https://plataforma-edu-back-gpcsh9h7fddkfvfb.chilecentral-01.azurewebsites.net';
+
 export default function GestionSecciones() {
     const [secciones, setSecciones] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -31,7 +34,8 @@ export default function GestionSecciones() {
         setLoading(true);
         setError(null);
         try {
-            const response = await axios.get('https://plataforma-edu-back-gpcsh9h7fddkfvfb.chilecentral-01.azurewebsites.net/api/secciones', {
+            // ✅ URL ACTUALIZADA A PRODUCCIÓN
+            const response = await axios.get(`${BASE_URL}/api/secciones`, {
                 withCredentials: true
             });
             console.log('Secciones cargadas:', response.data);
@@ -81,7 +85,8 @@ export default function GestionSecciones() {
         }
 
         try {
-            await axios.delete(`http://localhost:8081/api/secciones/${id}`, {
+            // ✅ URL ACTUALIZADA A PRODUCCIÓN
+            await axios.delete(`${BASE_URL}/api/secciones/${id}`, {
                 withCredentials: true
             });
             setSecciones(secciones.filter(s => s.id !== id));
@@ -101,8 +106,9 @@ export default function GestionSecciones() {
 
         try {
             const endpoint = seccion.activa ? 'desactivar' : 'activar';
+            // ✅ URL ACTUALIZADA A PRODUCCIÓN
             await axios.patch(
-                `http://localhost:8081/api/secciones/${seccion.id}/${endpoint}`,
+                `${BASE_URL}/api/secciones/${seccion.id}/${endpoint}`,
                 {},
                 { withCredentials: true }
             );

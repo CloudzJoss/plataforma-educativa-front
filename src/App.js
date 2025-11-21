@@ -14,7 +14,7 @@ const checkAuthAndCleanup = async () => {
 
   try {
     // 2. 🚨 CAMBIO: URL relativa (baseURL está en index.js)
-    const API_URL = "https://plataforma-edu-back-gpcsh9h7fddkfvfb.chilecentral-01.azurewebsites.net/api/usuarios/me/api/usuarios/me"; 
+    const API_URL = "https://plataforma-edu-back-gpcsh9h7fddkfvfb.chilecentral-01.azurewebsites.net/api/usuarios/me"; 
     
     // 3. 🚨 ELIMINADO: 'token' y 'config' ya no son necesarios
     // const token = localStorage.getItem('authToken');

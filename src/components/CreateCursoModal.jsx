@@ -33,7 +33,8 @@ export default function CreateCursoModal({ isOpen, onClose, onCursoCreated }) {
         setLoading(true);
         setError(null);
 
-        const API_URL = `http://localhost:8081/api/cursos`;
+        // 👇 URL ACTUALIZADA A PRODUCCIÓN
+        const API_URL = `https://plataforma-edu-back-gpcsh9h7fddkfvfb.chilecentral-01.azurewebsites.net/api/cursos`;
         
         const payload = {
             titulo: titulo.trim(),
@@ -109,10 +110,10 @@ export default function CreateCursoModal({ isOpen, onClose, onCursoCreated }) {
                     <p style={{ 
                         fontSize: '0.9em', 
                         color: '#666', 
-                        marginBottom: '20px',
-                        padding: '10px',
-                        backgroundColor: '#f5f5f5',
-                        borderRadius: '4px',
+                        marginBottom: '20px', 
+                        padding: '10px', 
+                        backgroundColor: '#f5f5f5', 
+                        borderRadius: '4px', 
                         borderLeft: '3px solid #2196F3'
                     }}>
                         ℹ️ El código del curso se generará automáticamente según el nivel seleccionado.
@@ -163,9 +164,9 @@ export default function CreateCursoModal({ isOpen, onClose, onCursoCreated }) {
                             <div className="auth-error" style={{ 
                                 color: '#d32f2f', 
                                 backgroundColor: '#ffebee',
-                                padding: '12px',
-                                borderRadius: '4px',
-                                marginTop: '10px',
+                                padding: '12px', 
+                                borderRadius: '4px', 
+                                marginTop: '10px', 
                                 border: '1px solid #ef5350'
                             }}>
                                 {error}

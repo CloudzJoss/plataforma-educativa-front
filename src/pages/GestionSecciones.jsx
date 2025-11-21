@@ -1,4 +1,5 @@
 // src/pages/GestionSecciones.jsx
+// src/pages/GestionSecciones.jsx
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import CreateSeccionModal from '../components/CreateSeccionModal';
@@ -34,7 +35,7 @@ export default function GestionSecciones() {
         setLoading(true);
         setError(null);
         try {
-            // ✅ URL ACTUALIZADA A PRODUCCIÓN
+            // ✅ URL ACTUALIZADA
             const response = await axios.get(`${BASE_URL}/api/secciones`, {
                 withCredentials: true
             });
@@ -85,7 +86,7 @@ export default function GestionSecciones() {
         }
 
         try {
-            // ✅ URL ACTUALIZADA A PRODUCCIÓN
+            // ✅ URL ACTUALIZADA
             await axios.delete(`${BASE_URL}/api/secciones/${id}`, {
                 withCredentials: true
             });
@@ -106,7 +107,7 @@ export default function GestionSecciones() {
 
         try {
             const endpoint = seccion.activa ? 'desactivar' : 'activar';
-            // ✅ URL ACTUALIZADA A PRODUCCIÓN
+            // ✅ URL ACTUALIZADA
             await axios.patch(
                 `${BASE_URL}/api/secciones/${seccion.id}/${endpoint}`,
                 {},

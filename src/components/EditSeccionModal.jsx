@@ -44,7 +44,7 @@ export default function EditSeccionModal({ isOpen, onClose, seccionToEdit, onSec
     const cargarCursos = async () => {
         setLoadingCursos(true);
         try {
-            const response = await axios.get('http://localhost:8081/api/cursos', {
+            const response = await axios.get('https://plataforma-edu-back-gpcsh9h7fddkfvfb.chilecentral-01.azurewebsites.net/api/cursos', {
                 withCredentials: true
             });
             setCursos(response.data);

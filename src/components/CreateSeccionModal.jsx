@@ -48,7 +48,8 @@ export default function CreateSeccionModal({ isOpen, onClose, onSeccionCreated }
     const cargarCursos = async () => {
         setLoadingCursos(true);
         try {
-            const response = await axios.get('http://localhost:8081/api/cursos', {
+            // 👇 URL ACTUALIZADA A PRODUCCIÓN
+            const response = await axios.get('https://plataforma-edu-back-gpcsh9h7fddkfvfb.chilecentral-01.azurewebsites.net/api/cursos', {
                 withCredentials: true
             });
             setCursos(response.data);
@@ -70,7 +71,8 @@ export default function CreateSeccionModal({ isOpen, onClose, onSeccionCreated }
         setLoading(true);
         setError(null);
 
-        const API_URL = 'http://localhost:8081/api/secciones';
+        // 👇 URL ACTUALIZADA A PRODUCCIÓN
+        const API_URL = 'https://plataforma-edu-back-gpcsh9h7fddkfvfb.chilecentral-01.azurewebsites.net/api/secciones';
 
         const payload = {
             nombre: nombre.trim(),

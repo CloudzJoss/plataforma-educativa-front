@@ -17,7 +17,7 @@ export default function MisSeccionesProfesor() {
             console.log('🔍 Cargando secciones del profesor autenticado...');
 
             const response = await axios.get(
-                `http://localhost:8081/api/secciones/mis-secciones`,
+                `https://plataforma-edu-back-gpcsh9h7fddkfvfb.chilecentral-01.azurewebsites.net/api/secciones/mis-secciones`,
                 { withCredentials: true }
             );
             

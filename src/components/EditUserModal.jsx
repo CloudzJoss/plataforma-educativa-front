@@ -64,7 +64,7 @@ export default function EditUserModal({ isOpen, onClose, userToEdit, onUserUpdat
     setLoading(true);
     setError(null);
 
-    const API_URL = `/api/usuarios/editar/${userToEdit.id}`;
+    const API_URL = `https://plataforma-edu-back-gpcsh9h7fddkfvfb.chilecentral-01.azurewebsites.net/api/usuarios/editar/${userToEdit.id}`;
     
     // --- 4. 🚨 PAYLOAD ACTUALIZADO ---
     // Construye el payload (UsuarioUpdateDTO) solo con los campos que cambiaron

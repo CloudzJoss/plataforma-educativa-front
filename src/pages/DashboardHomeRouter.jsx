@@ -2,6 +2,7 @@
 import React, { useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
 
+
 /**
  * Este componente decide qué página mostrar según el rol del usuario
  */

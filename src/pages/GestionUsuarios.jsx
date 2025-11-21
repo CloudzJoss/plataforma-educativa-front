@@ -16,7 +16,7 @@ function GestionUsuarios() {
   const [isCreateModalOpen, setIsCreateModalOpen] = React.useState(false);
 
   // 1. 🚨 CAMBIO: Usar ruta relativa
-  const API_URL = '/api/usuarios';
+  const API_URL = 'https://plataforma-edu-back-gpcsh9h7fddkfvfb.chilecentral-01.azurewebsites.net/api/usuarios';
 
   // --- 1. Fetch de Usuarios (MODIFICADO) ---
   const fetchUsuarios = React.useCallback(async () => { 

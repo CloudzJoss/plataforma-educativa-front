@@ -33,7 +33,7 @@ export default function EditCursoModal({ isOpen, onClose, cursoToEdit, onCursoUp
         setLoading(true);
         setError(null);
 
-        const API_URL = `http://localhost:8081/api/cursos/${cursoToEdit.id}`;
+        const API_URL = `https://plataforma-edu-back-gpcsh9h7fddkfvfb.chilecentral-01.azurewebsites.net/api/cursos/${cursoToEdit.id}`;
         
         const payload = {
             titulo: titulo.trim(),

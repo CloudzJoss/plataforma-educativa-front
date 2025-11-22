@@ -7,12 +7,15 @@ import Dashboard from "./pages/Dashboard.jsx";
 import GestionUsuarios from "./pages/GestionUsuarios.jsx";
 import GestionCursos from "./pages/GestionCursos.jsx";
 import GestionSecciones from "./pages/GestionSecciones.jsx";
-import MisSeccionesProfesor from "./pages/MisSeccionesProfesor.jsx"; // 👈 NUEVO
+import MisSeccionesProfesor from "./pages/MisSeccionesProfesor.jsx";
+
+// 👇 NUEVAS PÁGINAS PARA ALUMNOS
+import MisMatriculas from "./pages/MisMatriculas.jsx";
+import SeccionesDisponibles from "./pages/SeccionesDisponibles.jsx";
 
 import ProtectedRoute from "./security/ProtectedRoute.jsx";
 import DashboardHomeRouter from "./pages/DashboardHomeRouter.jsx";
 
-// Configuración de rutas
 const routeConfig = [
     {
         path: "/",
@@ -57,14 +60,30 @@ const routeConfig = [
             },
             // --- RUTAS DE PROFESOR ---
             {
-                path: "mis-secciones", // 👈 NUEVO
+                path: "mis-secciones",
                 element: (
                     <ProtectedRoute roles={["PROFESOR"]}>
                         <MisSeccionesProfesor />
                     </ProtectedRoute>
                 )
+            },
+            // --- RUTAS DE ALUMNO ---
+            {
+                path: "mis-matriculas",
+                element: (
+                    <ProtectedRoute roles={["ALUMNO"]}>
+                        <MisMatriculas />
+                    </ProtectedRoute>
+                )
+            },
+            {
+                path: "secciones-disponibles",
+                element: (
+                    <ProtectedRoute roles={["ALUMNO"]}>
+                        <SeccionesDisponibles />
+                    </ProtectedRoute>
+                )
             }
-            // Aquí puedes agregar más rutas para ALUMNO, etc.
         ]
     },
 ];

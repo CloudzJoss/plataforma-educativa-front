@@ -7,7 +7,7 @@ import '../styles/Sidebar.css';
 export default function Sidebar({ isOpen, onClose }) {
     const navigate = useNavigate();
     const userRole = localStorage.getItem('userRole');
-    const userName = localStorage.getItem('userName'); // 👈 Opcional: mostrar nombre
+    const userName = localStorage.getItem('userName');
 
     const handleLogout = async () => {
         console.warn("🔒 Cerrando sesión...");
@@ -41,7 +41,7 @@ export default function Sidebar({ isOpen, onClose }) {
 
                 <h2>Menú Principal</h2>
 
-                {/* Mostrar nombre del usuario (opcional) */}
+                {/* Mostrar nombre del usuario */}
                 {userName && (
                     <div style={{ 
                         padding: '10px', 
@@ -64,6 +64,7 @@ export default function Sidebar({ isOpen, onClose }) {
                         <Link to="/dashboard/usuarios" onClick={onClose}>👥 Gestión de Usuarios</Link>
                         <Link to="/dashboard/cursos" onClick={onClose}>📚 Gestión de Cursos</Link>
                         <Link to="/dashboard/secciones" onClick={onClose}>🏫 Gestión de Secciones</Link>
+                        <Link to="/dashboard/matriculas" onClick={onClose}>📋 Gestión de Matrículas</Link>
                     </>
                 )}
 
@@ -73,24 +74,18 @@ export default function Sidebar({ isOpen, onClose }) {
                         <Link to="/dashboard/mis-secciones" onClick={onClose}>
                             📖 Mis Secciones
                         </Link>
-                        {/* Aquí puedes agregar más enlaces como:
-                        <Link to="/dashboard/mis-estudiantes" onClick={onClose}>
-                            👨‍🎓 Mis Estudiantes
-                        </Link>
-                        <Link to="/dashboard/calificaciones" onClick={onClose}>
-                            📝 Calificaciones
-                        </Link>
-                        */}
                     </>
                 )}
 
                 {/* Enlaces de ALUMNO */}
                 {userRole === 'ALUMNO' && (
                     <>
-                        <Link to="/dashboard/mis-cursos" onClick={onClose}>
+                        <Link to="/dashboard/mis-matriculas" onClick={onClose}>
                             📚 Mis Cursos
                         </Link>
-                        {/* Aquí puedes agregar más enlaces */}
+                        <Link to="/dashboard/secciones-disponibles" onClick={onClose}>
+                            🔍 Buscar Secciones
+                        </Link>
                     </>
                 )}
 

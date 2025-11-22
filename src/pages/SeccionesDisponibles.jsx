@@ -46,7 +46,7 @@ export default function SeccionesDisponibles() {
 
         try {
             const response = await axios.post(
-                'http://localhost:8081/api/matriculas/matricularse',
+                'https://plataforma-edu-back-gpcsh9h7fddkfvfb.chilecentral-01.azurewebsites.net/api/matriculas/matricularse',
                 { seccionId: seccionId },
                 { withCredentials: true }
             );

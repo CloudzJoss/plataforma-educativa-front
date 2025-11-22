@@ -66,7 +66,7 @@ export default function EditSeccionModal({ isOpen, onClose, seccionToEdit, onSec
         setLoading(true);
         setError(null);
 
-        const API_URL = `http://localhost:8081/api/secciones/${seccionToEdit.id}`;
+        const API_URL = `https://plataforma-edu-back-gpcsh9h7fddkfvfb.chilecentral-01.azurewebsites.net/api/secciones/${seccionToEdit.id}`;
 
         const payload = {
             nombre: nombre.trim(),

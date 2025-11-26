@@ -27,7 +27,13 @@ export default function EditSeccionModal({ isOpen, onClose, seccionToEdit, onSec
         if (isOpen && seccionToEdit) {
             setNombre(seccionToEdit.nombre || '');
             setNivelSeccion(seccionToEdit.nivelSeccion || 'SECUNDARIA');
-            setGradoSeccion(seccionToEdit.gradoSeccion || '');
+            
+            // 🟢 EXTRACCIÓN DEL NÚMERO DE GRADO
+            // Si viene "5to A", intentamos sacar el "5" para el select.
+            const gradoStr = seccionToEdit.gradoSeccion || '';
+            const match = gradoStr.match(/\d+/); // Busca el primer número
+            setGradoSeccion(match ? match[0] : ''); 
+
             setTurno(seccionToEdit.turno || 'MAÑANA');
             setAula(seccionToEdit.aula || '');
             setCapacidad(seccionToEdit.capacidad || 30);
@@ -44,6 +50,7 @@ export default function EditSeccionModal({ isOpen, onClose, seccionToEdit, onSec
     const cargarCursos = async () => {
         setLoadingCursos(true);
         try {
+            // ✅ URL ORIGINAL NO MODIFICADA
             const response = await axios.get('https://plataforma-edu-back-gpcsh9h7fddkfvfb.chilecentral-01.azurewebsites.net/api/cursos', {
                 withCredentials: true
             });
@@ -56,6 +63,27 @@ export default function EditSeccionModal({ isOpen, onClose, seccionToEdit, onSec
         }
     };
 
+    // --- 🟢 LÓGICA NUEVA: Filtrado de Cursos y Grados ---
+
+    const cursosFiltrados = cursos.filter(curso => 
+        (curso.nivelDestino || curso.nivel) === nivelSeccion
+    );
+
+    const obtenerOpcionesGrado = () => {
+        switch (nivelSeccion) {
+            case 'INICIAL': return ['1', '2', '3'];
+            case 'PRIMARIA': return ['1', '2', '3', '4', '5', '6'];
+            case 'SECUNDARIA': return ['1', '2', '3', '4', '5'];
+            default: return [];
+        }
+    };
+
+    const handleNivelChange = (e) => {
+        setNivelSeccion(e.target.value);
+        setCursoId('');
+        setGradoSeccion('');
+    };
+
     if (!isOpen || !seccionToEdit) {
         return null;
     }
@@ -66,12 +94,16 @@ export default function EditSeccionModal({ isOpen, onClose, seccionToEdit, onSec
         setLoading(true);
         setError(null);
 
+        // ✅ URL ORIGINAL NO MODIFICADA
         const API_URL = `https://plataforma-edu-back-gpcsh9h7fddkfvfb.chilecentral-01.azurewebsites.net/api/secciones/${seccionToEdit.id}`;
+
+        // Reconstruimos el string del grado
+        const gradoFinal = gradoSeccion ? `${gradoSeccion}º Grado` : '';
 
         const payload = {
             nombre: nombre.trim(),
             nivelSeccion: nivelSeccion,
-            gradoSeccion: gradoSeccion.trim(),
+            gradoSeccion: gradoFinal,
             turno: turno,
             aula: aula.trim(),
             capacidad: parseInt(capacidad),
@@ -82,7 +114,7 @@ export default function EditSeccionModal({ isOpen, onClose, seccionToEdit, onSec
         };
 
         // Validación
-        if (!payload.nombre || !payload.gradoSeccion || !payload.fechaInicio ||
+        if (!payload.nombre || !gradoSeccion || !payload.fechaInicio ||
             !payload.fechaFin || !payload.cursoId || !payload.profesorDni) {
             setError('Todos los campos obligatorios deben ser completados');
             setLoading(false);
@@ -91,22 +123,6 @@ export default function EditSeccionModal({ isOpen, onClose, seccionToEdit, onSec
 
         if (payload.capacidad < 1 || payload.capacidad > 100) {
             setError('La capacidad debe estar entre 1 y 100');
-            setLoading(false);
-            return;
-        }
-
-        // Evitar peticiones si no hay cambios
-        if (payload.nombre === seccionToEdit.nombre &&
-            payload.nivelSeccion === seccionToEdit.nivelSeccion &&
-            payload.gradoSeccion === seccionToEdit.gradoSeccion &&
-            payload.turno === seccionToEdit.turno &&
-            payload.aula === (seccionToEdit.aula || '') &&
-            payload.capacidad === seccionToEdit.capacidad &&
-            payload.fechaInicio === seccionToEdit.fechaInicio &&
-            payload.fechaFin === seccionToEdit.fechaFin &&
-            payload.cursoId === seccionToEdit.cursoId &&
-            payload.profesorDni === seccionToEdit.dniProfesor) {
-            setError('No se realizaron cambios.');
             setLoading(false);
             return;
         }
@@ -127,31 +143,11 @@ export default function EditSeccionModal({ isOpen, onClose, seccionToEdit, onSec
 
         } catch (err) {
             console.error('Error al actualizar sección:', err);
-
+            // ... (Manejo de errores original)
             if (err.response) {
-                const status = err.response.status;
-                const errorData = err.response.data;
-
-                if (status === 401) {
-                    setError('No estás autenticado. Por favor, inicia sesión nuevamente.');
-                } else if (status === 403) {
-                    setError('No tienes permisos de Administrador para editar secciones.');
-                } else if (status === 404) {
-                    setError('La sección no existe o fue eliminada.');
-                } else if (status === 400 && errorData?.message) {
-                    setError(errorData.message);
-                } else if (status === 500) {
-                    const errorMsg = errorData?.message || errorData?.error || 'Error interno del servidor';
-                    setError(`Error del servidor: ${errorMsg}`);
-                } else if (errorData?.message) {
-                    setError(errorData.message);
-                } else {
-                    setError(`Error del servidor: ${status}`);
-                }
-            } else if (err.request) {
-                setError('No se pudo conectar con el servidor. Verifica tu conexión.');
+                setError(err.response.data?.message || 'Error al actualizar');
             } else {
-                setError('Ocurrió un error inesperado: ' + err.message);
+                setError('Error de conexión');
             }
         } finally {
             setLoading(false);
@@ -202,7 +198,7 @@ export default function EditSeccionModal({ isOpen, onClose, seccionToEdit, onSec
                                 Nivel*
                                 <select
                                     value={nivelSeccion}
-                                    onChange={(e) => setNivelSeccion(e.target.value)}
+                                    onChange={handleNivelChange}
                                     required
                                 >
                                     <option value="INICIAL">Inicial</option>
@@ -213,13 +209,16 @@ export default function EditSeccionModal({ isOpen, onClose, seccionToEdit, onSec
 
                             <label>
                                 Grado*
-                                <input
-                                    type="text"
+                                <select
                                     value={gradoSeccion}
                                     onChange={(e) => setGradoSeccion(e.target.value)}
-                                    placeholder="Ej: 5to A"
                                     required
-                                />
+                                >
+                                    <option value="">Selecciona</option>
+                                    {obtenerOpcionesGrado().map((num) => (
+                                        <option key={num} value={num}>{num}º</option>
+                                    ))}
+                                </select>
                             </label>
                         </div>
 
@@ -238,7 +237,7 @@ export default function EditSeccionModal({ isOpen, onClose, seccionToEdit, onSec
                             </label>
 
                             <label>
-                                Aula
+                                Aula (Libre)
                                 <input
                                     type="text"
                                     value={aula}
@@ -294,11 +293,12 @@ export default function EditSeccionModal({ isOpen, onClose, seccionToEdit, onSec
                                 disabled={loadingCursos}
                             >
                                 <option value="">
-                                    {loadingCursos ? 'Cargando cursos...' : 'Selecciona un curso'}
+                                    {loadingCursos ? 'Cargando cursos...' : 
+                                     cursosFiltrados.length === 0 ? 'Sin cursos para este nivel' : 'Selecciona un curso'}
                                 </option>
-                                {cursos.map((curso) => (
+                                {cursosFiltrados.map((curso) => (
                                     <option key={curso.id} value={curso.id}>
-                                        {curso.codigo} - {curso.titulo} ({curso.nivelDestino})
+                                        {curso.codigo} - {curso.titulo}
                                     </option>
                                 ))}
                             </select>

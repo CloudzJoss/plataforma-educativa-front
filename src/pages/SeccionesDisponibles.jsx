@@ -22,22 +22,17 @@ export default function SeccionesDisponibles() {
     // 1. Cargar Perfil del Alumno (Necesario para filtrar)
     const cargarPerfilAlumno = async () => {
         try {
-            // ⚠️ IMPORTANTE: Ajusta esta URL a tu endpoint real para obtener el usuario logueado.
-            // Si no tienes uno específico, puedes usar el que devuelve los datos del token o similar.
-            // Aquí asumo que existe un endpoint que devuelve los datos del usuario actual.
             const response = await axios.get(
                 'https://plataforma-edu-back-gpcsh9h7fddkfvfb.chilecentral-01.azurewebsites.net/api/auth/me', 
                 { withCredentials: true }
             );
             
-            // Asumiendo que la respuesta trae la estructura del usuario con perfilAlumno
             if (response.data && response.data.perfilAlumno) {
                 console.log('👤 Perfil Alumno cargado:', response.data.perfilAlumno);
                 setPerfilAlumno(response.data.perfilAlumno);
             }
         } catch (err) {
             console.warn('No se pudo cargar el perfil del alumno para filtrado automático', err);
-            // No bloqueamos la carga de secciones, pero el filtro estricto visual no funcionará
         }
     };
 
@@ -71,11 +66,13 @@ export default function SeccionesDisponibles() {
         if (!window.confirm('¿Estás seguro de matricularte en esta sección?')) return;
 
         try {
-            const response = await axios.post(
+            // ✅ CORRECCIÓN: Se eliminó "const response =" para evitar el error de 'unused variable'
+            await axios.post(
                 'https://plataforma-edu-back-gpcsh9h7fddkfvfb.chilecentral-01.azurewebsites.net/api/matriculas/matricularse',
                 { seccionId: seccionId },
                 { withCredentials: true }
             );
+            
             alert('¡Matrícula exitosa! Ya estás inscrito en este curso.');
             cargarSeccionesDisponibles(); // Recargar para actualizar cupos
         } catch (err) {

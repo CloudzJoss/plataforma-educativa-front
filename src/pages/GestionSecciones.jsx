@@ -1,5 +1,4 @@
 // src/pages/GestionSecciones.jsx
-// src/pages/GestionSecciones.jsx
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import CreateSeccionModal from '../components/CreateSeccionModal';
@@ -21,6 +20,7 @@ export default function GestionSecciones() {
 
     // Estados para filtros
     const [filtroNivel, setFiltroNivel] = useState('TODOS');
+    const [filtroGrado, setFiltroGrado] = useState('TODOS'); // <--- NUEVO ESTADO PARA GRADO
     const [filtroTurno, setFiltroTurno] = useState('TODOS');
     const [filtroActiva, setFiltroActiva] = useState('TODOS');
     const [searchTerm, setSearchTerm] = useState('');
@@ -52,6 +52,12 @@ export default function GestionSecciones() {
     // Filtrar secciones
     const seccionesFiltradas = secciones.filter((seccion) => {
         const coincideNivel = filtroNivel === 'TODOS' || seccion.nivelSeccion === filtroNivel;
+        
+        // --- NUEVA LÓGICA DE FILTRADO POR GRADO ---
+        // Verificamos si el grado de la sección incluye el número seleccionado (ej: "1" encuentra "1º Grado" o "1ro")
+        const coincideGrado = filtroGrado === 'TODOS' || 
+            (seccion.gradoSeccion && seccion.gradoSeccion.toString().includes(filtroGrado));
+
         const coincideTurno = filtroTurno === 'TODOS' || seccion.turno === filtroTurno;
         const coincideActiva = filtroActiva === 'TODOS' || 
             (filtroActiva === 'ACTIVA' ? seccion.activa : !seccion.activa);
@@ -61,7 +67,7 @@ export default function GestionSecciones() {
             seccion.tituloCurso.toLowerCase().includes(searchTerm.toLowerCase()) ||
             seccion.nombreProfesor.toLowerCase().includes(searchTerm.toLowerCase());
 
-        return coincideNivel && coincideTurno && coincideActiva && coincideBusqueda;
+        return coincideNivel && coincideGrado && coincideTurno && coincideActiva && coincideBusqueda;
     });
 
     // Handlers
@@ -163,7 +169,7 @@ export default function GestionSecciones() {
             {/* Filtros */}
             <div className="filters-container" style={{ 
                 display: 'grid', 
-                gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
+                gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', 
                 gap: '15px', 
                 marginBottom: '20px' 
             }}>
@@ -171,7 +177,7 @@ export default function GestionSecciones() {
                     <label>Buscar:</label>
                     <input
                         type="text"
-                        placeholder="Nombre, código, curso o profesor..."
+                        placeholder="Nombre, código..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ddd' }}
@@ -185,10 +191,28 @@ export default function GestionSecciones() {
                         onChange={(e) => setFiltroNivel(e.target.value)}
                         style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ddd' }}
                     >
-                        <option value="TODOS">Todos los niveles</option>
+                        <option value="TODOS">Todos</option>
                         <option value="INICIAL">Inicial</option>
                         <option value="PRIMARIA">Primaria</option>
                         <option value="SECUNDARIA">Secundaria</option>
+                    </select>
+                </div>
+
+                {/* --- NUEVO FILTRO DE GRADO --- */}
+                <div>
+                    <label>Grado:</label>
+                    <select
+                        value={filtroGrado}
+                        onChange={(e) => setFiltroGrado(e.target.value)}
+                        style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ddd' }}
+                    >
+                        <option value="TODOS">Todos</option>
+                        <option value="1">1º Grado</option>
+                        <option value="2">2º Grado</option>
+                        <option value="3">3º Grado</option>
+                        <option value="4">4º Grado</option>
+                        <option value="5">5º Grado</option>
+                        <option value="6">6º Grado</option>
                     </select>
                 </div>
 
@@ -199,7 +223,7 @@ export default function GestionSecciones() {
                         onChange={(e) => setFiltroTurno(e.target.value)}
                         style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ddd' }}
                     >
-                        <option value="TODOS">Todos los turnos</option>
+                        <option value="TODOS">Todos</option>
                         <option value="MAÑANA">Mañana</option>
                         <option value="TARDE">Tarde</option>
                         <option value="NOCHE">Noche</option>

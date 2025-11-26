@@ -12,17 +12,15 @@ const extraerNumero = (str) => {
 
 export default function SeccionesDisponibles() {
     const [secciones, setSecciones] = useState([]);
-    // Estados de carga separados para mejor control
     const [loadingSecciones, setLoadingSecciones] = useState(true);
     const [loadingProfile, setLoadingProfile] = useState(true);
-    
     const [error, setError] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
     
-    // Estado para el perfil del alumno logueado
-    const [perfilAlumno, setPerfilAlumno] = useState(null);
+    // Estado para el usuario logueado (Datos planos del DTO)
+    const [usuario, setUsuario] = useState(null);
 
-    // 1. Cargar Perfil del Alumno
+    // 1. Cargar Datos del Usuario (DTO Aplanado)
     const cargarPerfilAlumno = async () => {
         setLoadingProfile(true);
         try {
@@ -31,12 +29,14 @@ export default function SeccionesDisponibles() {
                 { withCredentials: true }
             );
             
-            if (response.data && response.data.perfilAlumno) {
-                console.log('👤 Perfil Alumno cargado:', response.data.perfilAlumno);
-                setPerfilAlumno(response.data.perfilAlumno);
+            // Con tu DTO, los datos vienen directos en response.data
+            // Verificamos si tiene rol ALUMNO y si tiene datos académicos
+            if (response.data && response.data.rol === 'ALUMNO' && response.data.grado) {
+                console.log('👤 Alumno identificado:', response.data);
+                setUsuario(response.data);
             } else {
-                console.warn("⚠️ El usuario no tiene perfil de alumno.");
-                setError("No se encontró información académica del estudiante.");
+                console.warn("⚠️ El usuario no es alumno o no tiene grado asignado.");
+                setError("No se encontró información académica válida para este usuario.");
             }
         } catch (err) {
             console.error('Error al cargar perfil:', err);
@@ -49,7 +49,6 @@ export default function SeccionesDisponibles() {
     // 2. Cargar Secciones
     const cargarSeccionesDisponibles = useCallback(async () => {
         setLoadingSecciones(true);
-        // No reseteamos error aquí para no borrar el error de perfil si existe
         try {
             console.log('🔍 Cargando secciones disponibles...');
             const response = await axios.get(
@@ -66,7 +65,6 @@ export default function SeccionesDisponibles() {
         }
     }, []);
 
-    // Inicialización
     useEffect(() => {
         cargarPerfilAlumno();
         cargarSeccionesDisponibles();
@@ -91,22 +89,23 @@ export default function SeccionesDisponibles() {
         }
     };
 
-    // --- 🔒 FILTRADO ESTRICTO ---
+    // --- 🔒 FILTRADO ESTRICTO (Adaptado al DTO plano) ---
     const seccionesFiltradas = secciones.filter((seccion) => {
-        // 1. Si no hay perfil cargado, NO MOSTRAR NADA (Seguridad visual)
-        if (!perfilAlumno) return false;
+        // 1. Si no hay usuario alumno cargado, NO MOSTRAR NADA
+        if (!usuario) return false;
 
-        // 2. Filtro por Texto (Buscador)
+        // 2. Filtro por Texto
         const coincideBusqueda =
             seccion.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
             seccion.codigo.toLowerCase().includes(searchTerm.toLowerCase()) ||
             seccion.tituloCurso.toLowerCase().includes(searchTerm.toLowerCase());
 
-        // 3. Validación de Grado y Nivel
-        const mismoNivel = seccion.nivelSeccion === perfilAlumno.nivel;
+        // 3. Validación de Grado y Nivel usando campos planos
+        // usuario.nivel viene directo del DTO, igual que usuario.grado
+        const mismoNivel = seccion.nivelSeccion === usuario.nivel;
         
         const numGradoSeccion = extraerNumero(seccion.gradoSeccion);
-        const numGradoAlumno = extraerNumero(perfilAlumno.grado);
+        const numGradoAlumno = extraerNumero(usuario.grado);
         
         const mismoGrado = numGradoSeccion === numGradoAlumno;
 
@@ -122,15 +121,12 @@ export default function SeccionesDisponibles() {
         }
     };
 
-    // Mostrar carga si CUALQUIERA de los dos (Perfil o Secciones) está cargando
     if (loadingSecciones || loadingProfile) {
         return (
             <div className="mis-secciones-container">
                 <div className="loading-container">
                     <div className="spinner"></div>
-                    <p>
-                        {loadingProfile ? "Identificando estudiante..." : "Buscando cursos..."}
-                    </p>
+                    <p>{loadingProfile ? "Identificando estudiante..." : "Buscando cursos..."}</p>
                 </div>
             </div>
         );
@@ -141,9 +137,9 @@ export default function SeccionesDisponibles() {
             <div className="secciones-header">
                 <div>
                     <h1>Secciones Disponibles</h1>
-                    {perfilAlumno && (
+                    {usuario && (
                         <p className="subtitle">
-                            Filtro automático: <strong>{perfilAlumno.nivel} - {perfilAlumno.grado}</strong>
+                            Filtro automático: <strong>{usuario.nivel} - {usuario.grado}</strong>
                         </p>
                     )}
                 </div>
@@ -154,11 +150,10 @@ export default function SeccionesDisponibles() {
 
             {error && (
                 <div style={{ padding: '15px', backgroundColor: '#ffebee', borderRadius: '8px', marginBottom: '20px', color: '#c62828', border: '1px solid #ef5350' }}>
-                    <strong>Error:</strong> {error}
+                    <strong>Atención:</strong> {error}
                 </div>
             )}
 
-            {/* Barra de búsqueda */}
             <div style={{ marginBottom: '20px' }}>
                 <input
                     type="text"
@@ -170,15 +165,14 @@ export default function SeccionesDisponibles() {
                 />
             </div>
 
-            {/* Grid de Secciones */}
             {seccionesFiltradas.length === 0 ? (
                 <div className="empty-state">
                     <div className="empty-icon">📭</div>
                     <h2>No hay secciones disponibles</h2>
                     <p>
-                        {perfilAlumno 
-                            ? `No se encontraron secciones abiertas para ${perfilAlumno.grado} de ${perfilAlumno.nivel}.` 
-                            : "No pudimos determinar tu grado académico."}
+                        {usuario 
+                            ? `No se encontraron secciones abiertas para ${usuario.grado} de ${usuario.nivel}.` 
+                            : "No pudimos verificar tu grado académico para mostrarte cursos."}
                     </p>
                 </div>
             ) : (
@@ -235,7 +229,6 @@ export default function SeccionesDisponibles() {
                                     </button>
                                 </div>
                             </div>
-                            
                             <div className="estudiantes-badge">
                                 <span className="estudiantes-icon">👥</span>
                                 <span className="estudiantes-text">

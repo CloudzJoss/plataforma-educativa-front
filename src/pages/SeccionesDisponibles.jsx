@@ -3,7 +3,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import '../styles/MisSeccionesProfesor.css';
 
-// Función auxiliar para sacar el número del grado (ej: "5to Grado" -> 5)
+// Función auxiliar para sacar el número del grado
 const extraerNumero = (str) => {
     if (!str) return null;
     const match = str.toString().match(/\d+/);
@@ -12,7 +12,10 @@ const extraerNumero = (str) => {
 
 export default function SeccionesDisponibles() {
     const [secciones, setSecciones] = useState([]);
-    const [loading, setLoading] = useState(true);
+    // Estados de carga separados para mejor control
+    const [loadingSecciones, setLoadingSecciones] = useState(true);
+    const [loadingProfile, setLoadingProfile] = useState(true);
+    
     const [error, setError] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
     
@@ -21,6 +24,7 @@ export default function SeccionesDisponibles() {
 
     // 1. Cargar Perfil del Alumno
     const cargarPerfilAlumno = async () => {
+        setLoadingProfile(true);
         try {
             const response = await axios.get(
                 'https://plataforma-edu-back-gpcsh9h7fddkfvfb.chilecentral-01.azurewebsites.net/api/auth/me', 
@@ -30,16 +34,22 @@ export default function SeccionesDisponibles() {
             if (response.data && response.data.perfilAlumno) {
                 console.log('👤 Perfil Alumno cargado:', response.data.perfilAlumno);
                 setPerfilAlumno(response.data.perfilAlumno);
+            } else {
+                console.warn("⚠️ El usuario no tiene perfil de alumno.");
+                setError("No se encontró información académica del estudiante.");
             }
         } catch (err) {
-            console.warn('No se pudo cargar el perfil del alumno para filtrado automático', err);
+            console.error('Error al cargar perfil:', err);
+            setError("Error al identificar al estudiante.");
+        } finally {
+            setLoadingProfile(false);
         }
     };
 
     // 2. Cargar Secciones
     const cargarSeccionesDisponibles = useCallback(async () => {
-        setLoading(true);
-        setError(null);
+        setLoadingSecciones(true);
+        // No reseteamos error aquí para no borrar el error de perfil si existe
         try {
             console.log('🔍 Cargando secciones disponibles...');
             const response = await axios.get(
@@ -52,7 +62,7 @@ export default function SeccionesDisponibles() {
             console.error('❌ Error al cargar secciones:', err);
             setError('No se pudieron cargar las secciones disponibles');
         } finally {
-            setLoading(false);
+            setLoadingSecciones(false);
         }
     }, []);
 
@@ -66,7 +76,6 @@ export default function SeccionesDisponibles() {
         if (!window.confirm('¿Estás seguro de matricularte en esta sección?')) return;
 
         try {
-            // ✅ SIN VARIABLES SIN USAR (Fix GitHub Actions)
             await axios.post(
                 'https://plataforma-edu-back-gpcsh9h7fddkfvfb.chilecentral-01.azurewebsites.net/api/matriculas/matricularse',
                 { seccionId: seccionId },
@@ -74,7 +83,7 @@ export default function SeccionesDisponibles() {
             );
             
             alert('¡Matrícula exitosa! Ya estás inscrito en este curso.');
-            cargarSeccionesDisponibles(); // Recargar para actualizar cupos
+            cargarSeccionesDisponibles(); 
         } catch (err) {
             console.error('Error al matricularse:', err);
             const errorMsg = err.response?.data?.message || 'No se pudo procesar la matrícula';
@@ -82,33 +91,26 @@ export default function SeccionesDisponibles() {
         }
     };
 
-    // --- 🔒 FILTRADO ESTRICTO POR GRADO Y NIVEL ---
+    // --- 🔒 FILTRADO ESTRICTO ---
     const seccionesFiltradas = secciones.filter((seccion) => {
-        // 1. Filtro por Texto (Buscador)
+        // 1. Si no hay perfil cargado, NO MOSTRAR NADA (Seguridad visual)
+        if (!perfilAlumno) return false;
+
+        // 2. Filtro por Texto (Buscador)
         const coincideBusqueda =
             seccion.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
             seccion.codigo.toLowerCase().includes(searchTerm.toLowerCase()) ||
             seccion.tituloCurso.toLowerCase().includes(searchTerm.toLowerCase());
 
-        // 2. Filtro Estricto por Perfil de Alumno
-        // Si tenemos el perfil del alumno, OCULTAMOS todo lo que no sea su grado.
-        let coincidePerfil = true;
+        // 3. Validación de Grado y Nivel
+        const mismoNivel = seccion.nivelSeccion === perfilAlumno.nivel;
         
-        if (perfilAlumno) {
-            // Validar Nivel (Ej: Primaria vs Secundaria)
-            const mismoNivel = seccion.nivelSeccion === perfilAlumno.nivel;
-            
-            // Validar Grado Numérico (Ej: "5to" vs "5º Grado" -> Ambos son 5)
-            const numGradoSeccion = extraerNumero(seccion.gradoSeccion);
-            const numGradoAlumno = extraerNumero(perfilAlumno.grado);
-            
-            const mismoGrado = numGradoSeccion === numGradoAlumno;
+        const numGradoSeccion = extraerNumero(seccion.gradoSeccion);
+        const numGradoAlumno = extraerNumero(perfilAlumno.grado);
+        
+        const mismoGrado = numGradoSeccion === numGradoAlumno;
 
-            // Solo pasa si coincide Nivel Y Grado
-            coincidePerfil = mismoNivel && mismoGrado;
-        }
-
-        return coincideBusqueda && coincidePerfil;
+        return coincideBusqueda && mismoNivel && mismoGrado;
     });
 
     const getTurnoColor = (turno) => {
@@ -120,12 +122,15 @@ export default function SeccionesDisponibles() {
         }
     };
 
-    if (loading) {
+    // Mostrar carga si CUALQUIERA de los dos (Perfil o Secciones) está cargando
+    if (loadingSecciones || loadingProfile) {
         return (
             <div className="mis-secciones-container">
                 <div className="loading-container">
                     <div className="spinner"></div>
-                    <p>Cargando secciones disponibles...</p>
+                    <p>
+                        {loadingProfile ? "Identificando estudiante..." : "Buscando cursos..."}
+                    </p>
                 </div>
             </div>
         );
@@ -136,20 +141,20 @@ export default function SeccionesDisponibles() {
             <div className="secciones-header">
                 <div>
                     <h1>Secciones Disponibles</h1>
-                    {perfilAlumno ? (
+                    {perfilAlumno && (
                         <p className="subtitle">
-                            Mostrando cursos exclusivamente para: <strong>{perfilAlumno.nivel} - {perfilAlumno.grado}</strong>
+                            Filtro automático: <strong>{perfilAlumno.nivel} - {perfilAlumno.grado}</strong>
                         </p>
-                    ) : (
-                        <p className="subtitle">Cargando tu perfil académico...</p>
                     )}
                 </div>
-                <button onClick={cargarSeccionesDisponibles} className="btn-refresh">🔄 Actualizar</button>
+                <button onClick={() => { cargarPerfilAlumno(); cargarSeccionesDisponibles(); }} className="btn-refresh">
+                    🔄 Actualizar
+                </button>
             </div>
 
             {error && (
-                <div style={{ padding: '15px', backgroundColor: '#ffebee', borderRadius: '8px', marginBottom: '20px', color: '#c62828' }}>
-                    {error}
+                <div style={{ padding: '15px', backgroundColor: '#ffebee', borderRadius: '8px', marginBottom: '20px', color: '#c62828', border: '1px solid #ef5350' }}>
+                    <strong>Error:</strong> {error}
                 </div>
             )}
 
@@ -172,8 +177,8 @@ export default function SeccionesDisponibles() {
                     <h2>No hay secciones disponibles</h2>
                     <p>
                         {perfilAlumno 
-                            ? `No se encontraron secciones abiertas para ${perfilAlumno.grado} de ${perfilAlumno.nivel} con cupo disponible.` 
-                            : "No hay secciones que coincidan con tu búsqueda."}
+                            ? `No se encontraron secciones abiertas para ${perfilAlumno.grado} de ${perfilAlumno.nivel}.` 
+                            : "No pudimos determinar tu grado académico."}
                     </p>
                 </div>
             ) : (

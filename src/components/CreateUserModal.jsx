@@ -139,7 +139,7 @@ export default function CreateUserModal({ isOpen, onClose, onUserCreated }) {
               <select value={rol} onChange={(e) => setRol(e.target.value)} required>
                 <option value="ALUMNO">Alumno</option>
                 <option value="PROFESOR">Profesor</option>
-                {/* 🚨 CORRECCIÓN CLAVE: El valor debe ser "ADMINISTRADOR" */}
+                {/* ⚠️ ESTE VALOR DEBE SER IDÉNTICO AL ENUM DE JAVA */}
                 <option value="ADMINISTRADOR">Administrador</option> 
               </select>
             </label>

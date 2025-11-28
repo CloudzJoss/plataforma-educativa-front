@@ -1,33 +1,38 @@
+/*/src/styles/Header.css*/
+
+/* ===== ESTILOS GENERALES ===== */
 .Encabezado {
   padding: 0.5em 3em;
   background-color: #f5f7fc;
-  position: sticky;
+  position: fixed;
   top: 0;
+  left: 0;
+  right: 0;
   z-index: 1000;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .icon {
-  /* ... (puede que ya tengas otros estilos aquí) ... */
-
-  /* Añade esta línea para "estirar" la imagen.
-    - 1.0 es el tamaño normal.
-    - 1.2 la estira un 20% horizontalmente.
-    - 1.5 la estira un 50%.
-    Prueba cambiando el número hasta que te guste.
-  */
-  transform: scaleX(3); 
+  transform: scaleX(3);
 }
 
 .Encabezado nav {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  min-height: 70px;
+  gap: 1rem;
 }
 
 .Encabezado .logo-name {
   display: flex;
   align-items: center;
   gap: 0.5em;
+  flex-shrink: 0;
+  z-index: 1001;
+  margin-right: 3rem;
 }
 
 .Encabezado .icon {
@@ -35,20 +40,216 @@
   height: 40px;
 }
 
+.nav-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  width: 100%;
+}
+
+.nav-links-wrapper {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  justify-content: center;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
 .Encabezado a {
-  margin-left: 1.5em;
   text-decoration: none;
   color: #000;
   font-weight: 500;
   letter-spacing: 1px;
   transition: color 0.3s;
+  font-size: 0.95em;
+  white-space: nowrap;
 }
 
 .Encabezado a:hover {
   color: #1a64aa;
 }
 
-.nav-container { display:flex; align-items:center; justify-content:space-between; gap:1rem; }
-.nav-links { display:flex; align-items:center; gap:1.5rem; }
-.nav-auth { margin-left: 1rem; }
-.btn-login { padding: 0.45rem 0.9rem; border-radius: 8px; border: none; background-color: #1a64aa; color:#fff; cursor:pointer; font-weight:500; }
+.nav-auth {
+  flex-shrink: 0;
+  z-index: 1001;
+}
+
+.btn-login,
+.btn-logout {
+  padding: 0.45rem 0.9rem;
+  border-radius: 8px;
+  border: none;
+  background-color: #1a64aa;
+  color: #fff;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 0.9em;
+  transition: background-color 0.3s;
+}
+
+.btn-login:hover,
+.btn-logout:hover {
+  background-color: #144a8c;
+}
+
+/* ===== HAMBURGUESA (OCULTA EN DESKTOP) ===== */
+.hamburger {
+  display: none;
+  flex-direction: column;
+  background: none;
+  border: none;
+  cursor: pointer;
+  gap: 5px;
+  z-index: 1001;
+}
+
+.hamburger span {
+  width: 25px;
+  height: 3px;
+  background-color: #000;
+  border-radius: 2px;
+  transition: all 0.3s ease;
+}
+
+.hamburger.active span:nth-child(1) {
+  transform: rotate(45deg) translate(10px, 10px);
+}
+
+.hamburger.active span:nth-child(2) {
+  opacity: 0;
+}
+
+.hamburger.active span:nth-child(3) {
+  transform: rotate(-45deg) translate(8px, -8px);
+}
+
+/* ===== OVERLAY PARA CERRAR MENÚ ===== */
+.menu-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 999;
+}
+
+/* ===== RESPONSIVE - TABLET (768px y menos) ===== */
+@media (max-width: 768px) {
+  .Encabezado {
+    padding: 0.5em 1.5em;
+  }
+
+  .Encabezado nav {
+    min-height: 50px;
+    gap: 0.5rem;
+  }
+
+  .Encabezado .icon {
+    width: 35px;
+    height: 35px;
+  }
+
+  .hamburger {
+    display: flex;
+  }
+
+  .nav-links-wrapper {
+    position: absolute;
+    top: 50px;
+    left: 0;
+    width: 100%;
+    background-color: #f5f7fc;
+    flex-direction: column;
+    padding: 1em 0;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+  }
+
+  .nav-links-wrapper.open {
+    max-height: 300px;
+  }
+
+  .nav-links {
+    flex-direction: column;
+    gap: 0;
+    width: 100%;
+  }
+
+  .Encabezado a {
+    display: block;
+    padding: 0.75em 1.5em;
+    margin: 0;
+    font-size: 0.9em;
+    border-bottom: 1px solid #e0e0e0;
+  }
+
+  .Encabezado a:last-child {
+    border-bottom: none;
+  }
+
+  .menu-overlay.open {
+    display: block;
+  }
+
+  .nav-auth {
+    margin-left: 0;
+  }
+
+  .btn-login,
+  .btn-logout {
+    padding: 0.4rem 0.7rem;
+    font-size: 0.85em;
+  }
+}
+
+/* ===== RESPONSIVE - MÓVIL (480px y menos) ===== */
+@media (max-width: 480px) {
+  .Encabezado {
+    padding: 0.4em 1em;
+  }
+
+  .Encabezado nav {
+    min-height: 45px;
+    gap: 0.25rem;
+  }
+
+  .Encabezado .icon {
+    width: 30px;
+    height: 30px;
+    transform: scaleX(2.5);
+  }
+
+  .hamburger span {
+    width: 22px;
+    height: 2.5px;
+  }
+
+  .nav-links-wrapper {
+    top: 45px;
+  }
+
+  .nav-links-wrapper.open {
+    max-height: 250px;
+  }
+
+  .Encabezado a {
+    padding: 0.65em 1.2em;
+    font-size: 0.85em;
+  }
+
+  .btn-login,
+  .btn-logout {
+    padding: 0.35rem 0.6rem;
+    font-size: 0.75em;
+  }
+}

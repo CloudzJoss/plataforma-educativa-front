@@ -1,3 +1,4 @@
+// src/pages/SeccionesDisponibles.jsx
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import '../styles/MisSeccionesProfesor.css';
@@ -12,26 +13,26 @@ const extraerNumero = (str) => {
 export default function SeccionesDisponibles() {
     const [secciones, setSecciones] = useState([]);
     const [misMatriculas, setMisMatriculas] = useState([]);
-   
+    
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-   
+    
     // Filtros
     const [searchTerm, setSearchTerm] = useState('');
     const [filtroCurso, setFiltroCurso] = useState('TODOS');
-   
+    
     const [usuario, setUsuario] = useState(null);
 
     const URL_BASE = "https://plataforma-edu-back-gpcsh9h7fddkfvfb.chilecentral-01.azurewebsites.net";
 
-    // 1. Cargar Datos Iniciales (Perfil + Secciones + Mis Matrículas)
+    // 1. Cargar Datos Iniciales
     const cargarDatos = useCallback(async () => {
         setLoading(true);
         setError(null);
         try {
             // A. Cargar Perfil
             const resPerfil = await axios.get(`${URL_BASE}/api/auth/me`, { withCredentials: true });
-           
+            
             if (resPerfil.data?.rol === "ALUMNO" && resPerfil.data.grado) {
                 setUsuario(resPerfil.data);
             } else {
@@ -79,8 +80,36 @@ export default function SeccionesDisponibles() {
         }
     };
 
+    // 🕵️‍♂️ 3. LÓGICA DE DETECCIÓN DE CRUCE DE HORARIOS
+    const verificarCruceHorario = (seccionCandidata) => {
+        // Si la sección nueva no tiene horarios, no choca con nada
+        if (!seccionCandidata.horarios || seccionCandidata.horarios.length === 0) return false;
+
+        // Recorremos todas las matrículas que el alumno ya tiene
+        for (const matricula of misMatriculas) {
+            // Dependiendo de tu backend, los horarios pueden venir directo en la matricula o dentro de 'seccion'
+            // Usamos una verificación defensiva:
+            const horariosInscritos = matricula.horarios || (matricula.seccion && matricula.seccion.horarios) || [];
+
+            // Comparamos cada horario inscrito contra cada horario de la nueva sección
+            for (const hInscrito of horariosInscritos) {
+                for (const hNuevo of seccionCandidata.horarios) {
+                    
+                    // Solo comparamos si es el mismo día
+                    if (hInscrito.diaSemana === hNuevo.diaSemana) {
+                        // Lógica de Solapamiento:
+                        // (InicioNuevo < FinInscrito) Y (FinNuevo > InicioInscrito)
+                        if (hNuevo.horaInicio < hInscrito.horaFin && hNuevo.horaFin > hInscrito.horaInicio) {
+                            return true; // ⛔ ¡Encontramos un cruce!
+                        }
+                    }
+                }
+            }
+        }
+        return false; // ✅ No hay cruces
+    };
+
     // --- LÓGICA DE FILTRADO ---
-   
     const cursosDisponiblesParaFiltro = [...new Set(
         secciones
             .filter(s => usuario && s.nivelSeccion === usuario.nivel)
@@ -89,8 +118,6 @@ export default function SeccionesDisponibles() {
 
     const seccionesFiltradas = secciones.filter((s) => {
         if (!usuario) return false;
-
-        // A. Filtro de Grado y Nivel (Estricto)
         const mismoNivel = s.nivelSeccion === usuario.nivel;
         const gradoAlumno = extraerNumero(usuario.grado);
         const gradoSeccion = extraerNumero(s.gradoSeccion);
@@ -98,19 +125,16 @@ export default function SeccionesDisponibles() {
 
         if (!mismoNivel || !mismoGrado) return false;
 
-        // B. Filtro de Texto (Buscador)
         const coincideBusqueda =
             s.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
             s.codigo.toLowerCase().includes(searchTerm.toLowerCase()) ||
             s.tituloCurso.toLowerCase().includes(searchTerm.toLowerCase());
 
-        // C. Filtro por Curso (Combobox)
         const coincideCurso = filtroCurso === 'TODOS' || s.tituloCurso === filtroCurso;
 
         return coincideBusqueda && coincideCurso;
     });
 
-    // Colores para el diseño
     const getTurnoColor = (turno) => {
         switch (turno) {
             case "MAÑANA": return "#ff9800";
@@ -120,12 +144,10 @@ export default function SeccionesDisponibles() {
         }
     };
 
-    // 🕒 NUEVA FUNCIÓN: Formatear horarios
     const formatearHorarios = (horarios) => {
         if (!horarios || horarios.length === 0) {
             return <span style={{ color: '#999' }}>Sin horarios</span>;
         }
-
         return (
             <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
                 {horarios.map((h, idx) => (
@@ -150,7 +172,6 @@ export default function SeccionesDisponibles() {
 
     return (
         <div className="mis-secciones-container">
-            {/* Header */}
             <div className="secciones-header">
                 <div>
                     <h1>Secciones Disponibles</h1>
@@ -160,9 +181,7 @@ export default function SeccionesDisponibles() {
                         </p>
                     )}
                 </div>
-                <button onClick={cargarDatos} className="btn-refresh">
-                    🔄 Actualizar
-                </button>
+                <button onClick={cargarDatos} className="btn-refresh">🔄 Actualizar</button>
             </div>
 
             {error && (
@@ -172,38 +191,14 @@ export default function SeccionesDisponibles() {
             )}
 
             {/* --- BARRA DE FILTROS --- */}
-            <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-                gap: '15px',
-                marginBottom: '20px',
-                backgroundColor: 'white',
-                padding: '15px',
-                borderRadius: '8px',
-                boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
-            }}>
-                {/* Buscador de Texto */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '15px', marginBottom: '20px', backgroundColor: 'white', padding: '15px', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
                 <div>
                     <label style={{ fontSize: '0.9em', color: '#666', marginBottom: '5px', display: 'block' }}>Buscar:</label>
-                    <input
-                        type="text"
-                        placeholder="Código, profesor..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="search-input"
-                        style={{ width: '100%', margin: 0 }}
-                    />
+                    <input type="text" placeholder="Código, profesor..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="search-input" style={{ width: '100%', margin: 0 }} />
                 </div>
-
-                {/* Filtro de Cursos (Combobox) */}
                 <div>
                     <label style={{ fontSize: '0.9em', color: '#666', marginBottom: '5px', display: 'block' }}>Filtrar por Curso:</label>
-                    <select
-                        value={filtroCurso}
-                        onChange={(e) => setFiltroCurso(e.target.value)}
-                        className="search-input"
-                        style={{ width: '100%', margin: 0 }}
-                    >
+                    <select value={filtroCurso} onChange={(e) => setFiltroCurso(e.target.value)} className="search-input" style={{ width: '100%', margin: 0 }}>
                         <option value="TODOS">Todos los cursos</option>
                         {cursosDisponiblesParaFiltro.map(nombreCurso => (
                             <option key={nombreCurso} value={nombreCurso}>{nombreCurso}</option>
@@ -222,14 +217,14 @@ export default function SeccionesDisponibles() {
             ) : (
                 <div className="secciones-grid">
                     {seccionesFiltradas.map((seccion) => {
-                        // Lógica para verificar si YA TIENE EL CURSO
-                        const yaTieneCurso = misMatriculas.some(
-                            m => m.cursoId === seccion.cursoId
-                        );
+                        // 1. Verificar si ya tiene el curso
+                        const yaTieneCurso = misMatriculas.some(m => m.cursoId === seccion.cursoId);
+                        
+                        // 2. Verificar Cruce de Horario (Nueva Lógica)
+                        const tieneCruce = !yaTieneCurso && verificarCruceHorario(seccion);
 
                         return (
                             <div key={seccion.id} className="seccion-card">
-                                {/* Header con color según turno */}
                                 <div className="card-header">
                                     <div className="card-icon"><span>📚</span></div>
                                     <div className="card-title-section">
@@ -241,31 +236,25 @@ export default function SeccionesDisponibles() {
                                     </span>
                                 </div>
 
-                                {/* Cuerpo de la tarjeta */}
                                 <div className="card-body">
                                     <div className="info-row">
                                         <span className="info-label">Código:</span>
                                         <span className="info-value">{seccion.codigo}</span>
                                     </div>
-
                                     <div className="info-row">
                                         <span className="info-label">Profesor:</span>
                                         <span className="info-value">{seccion.nombreProfesor}</span>
                                     </div>
-
                                     <div className="info-row">
                                         <span className="info-label">Aula:</span>
                                         <span className="info-value">{seccion.aula || 'Virtual'}</span>
                                     </div>
-
-                                    {/* 🕒 NUEVA SECCIÓN: HORARIOS */}
                                     <div className="info-row">
                                         <span className="info-label">🕒 Horarios:</span>
                                         <span className="info-value" style={{ display: 'block', marginTop: '4px' }}>
                                             {formatearHorarios(seccion.horarios)}
                                         </span>
                                     </div>
-
                                     <div className="info-row">
                                         <span className="info-label">Cupos:</span>
                                         <span className="info-value" style={{ fontWeight: 'bold', color: seccion.tieneCupo ? '#4caf50' : '#f44336' }}>
@@ -274,7 +263,6 @@ export default function SeccionesDisponibles() {
                                     </div>
                                 </div>
 
-                                {/* Pie de tarjeta y Botón */}
                                 <div className="card-footer">
                                     <div className="fecha-info">
                                         <div className="fecha-item">
@@ -285,7 +273,6 @@ export default function SeccionesDisponibles() {
 
                                     <div className="card-actions">
                                         {yaTieneCurso ? (
-                                            // Botón Deshabilitado si ya tiene el curso
                                             <button
                                                 className="btn-ingresar"
                                                 disabled
@@ -293,8 +280,18 @@ export default function SeccionesDisponibles() {
                                             >
                                                 ✅ Ya inscrito
                                             </button>
+                                        ) : tieneCruce ? (
+                                            // ⛔ BOTÓN DE CRUCE DE HORARIO
+                                            <button
+                                                className="btn-ingresar"
+                                                disabled
+                                                style={{ backgroundColor: '#d32f2f', cursor: 'not-allowed', opacity: 0.8 }}
+                                                title="El horario choca con tus cursos actuales"
+                                            >
+                                                ⛔ Cruce de horario
+                                            </button>
                                         ) : (
-                                            // Botón de Matricula Normal
+                                            // BOTÓN NORMAL
                                             <button
                                                 onClick={() => handleMatricularse(seccion.id)}
                                                 className="btn-ingresar"
@@ -309,14 +306,6 @@ export default function SeccionesDisponibles() {
                                             </button>
                                         )}
                                     </div>
-                                </div>
-                               
-                                {/* Badge flotante de estudiantes */}
-                                <div className="estudiantes-badge">
-                                    <span className="estudiantes-icon">👥</span>
-                                    <span className="estudiantes-text">
-                                        {seccion.estudiantesMatriculados}/{seccion.capacidad}
-                                    </span>
                                 </div>
                             </div>
                         );

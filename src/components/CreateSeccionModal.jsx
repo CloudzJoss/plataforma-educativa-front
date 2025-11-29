@@ -1,3 +1,4 @@
+// src/components/CreateSeccionModal.jsx
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 
@@ -62,19 +63,11 @@ export default function CreateSeccionModal({ isOpen, onClose, onSeccionCreated }
 
     // --- Funciones para Horarios ---
 
-    /**
-     * 🔒 VALIDA QUE EL NUEVO HORARIO NO CHOQUE CON LOS YA AGREGADOS
-     * Lógica: Mismo día + horas que se solapan = conflicto
-     */
     const validarCruceHorarioLocal = (nuevoHorario) => {
         return horarios.some(h => {
-            // Misma semana
             if (h.diaSemana !== nuevoHorario.diaSemana) {
                 return false;
             }
-
-            // Verificar solapamiento de horas
-            // Conflicto si: (inicioNuevo < finExistente) Y (finNuevo > inicioExistente)
             const inicioNuevo = nuevoHorario.horaInicio;
             const finNuevo = nuevoHorario.horaFin;
             const inicioEx = h.horaInicio;
@@ -97,19 +90,16 @@ export default function CreateSeccionModal({ isOpen, onClose, onSeccionCreated }
 
         const nuevoHorario = {
             diaSemana: tempDia,
-            horaInicio: tempInicio + ":00", // Backend espera HH:mm:ss
+            horaInicio: tempInicio + ":00",
             horaFin: tempFin + ":00"
         };
 
-        // 🔒 VALIDAR CRUCE EN FRONTEND
         if (validarCruceHorarioLocal(nuevoHorario)) {
             alert(`⚠️ Error: Ya hay un horario asignado el ${tempDia} que choca con ${tempInicio} - ${tempFin}`);
             return;
         }
 
         setHorarios([...horarios, nuevoHorario]);
-
-        // Resetear campos temporales
         setTempInicio('');
         setTempFin('');
     };
@@ -161,7 +151,7 @@ export default function CreateSeccionModal({ isOpen, onClose, onSeccionCreated }
             fechaFin: fechaFin,
             cursoId: parseInt(cursoId),
             profesorDni: profesorDni.trim(),
-            horarios: horarios // Enviamos la lista
+            horarios: horarios
         };
 
         try {
@@ -169,7 +159,22 @@ export default function CreateSeccionModal({ isOpen, onClose, onSeccionCreated }
             onSeccionCreated(response.data);
             onClose();
         } catch (err) {
-            setError(err.response?.data?.message || 'Error al crear la sección');
+            // 🚨 MANEJO DE ERROR MEJORADO 🚨
+            const msg = err.response?.data?.message || '';
+            console.error("Error backend:", msg);
+
+            // Verificamos palabras clave comunes en errores de cruce de horario
+            if (
+                msg.toLowerCase().includes('profesor') || 
+                msg.toLowerCase().includes('horario') || 
+                msg.toLowerCase().includes('cruce') ||
+                msg.toLowerCase().includes('conflict') ||
+                msg.toLowerCase().includes('overlap')
+            ) {
+                setError('⛔ NO SE PUEDE CREAR: El profesor tiene un cruce de horarios con otra sección.');
+            } else {
+                setError(msg || 'Error al crear la sección');
+            }
         } finally {
             setLoading(false);
         }
@@ -208,10 +213,9 @@ export default function CreateSeccionModal({ isOpen, onClose, onSeccionCreated }
                             <label> Fin* <input type="date" value={fechaFin} onChange={(e) => setFechaFin(e.target.value)} required /> </label>
                         </div>
 
-                        {/* 🕒 SECCIÓN DE HORARIOS CON VALIDACIÓN MEJORADA */}
                         <div style={{ marginTop: '15px', padding: '10px', backgroundColor: '#f9f9f9', borderRadius: '4px', border: '1px solid #eee' }}>
                             <h4 style={{ margin: '0 0 10px 0', fontSize: '0.9em' }}>🕒 Horarios Semanales</h4>
-                           
+                            
                             <div style={{ display: 'flex', gap: '5px', marginBottom: '10px' }}>
                                 <select value={tempDia} onChange={(e) => setTempDia(e.target.value)} style={{ flex: 2 }}>
                                     <option value="MONDAY">Lunes</option>
@@ -226,14 +230,12 @@ export default function CreateSeccionModal({ isOpen, onClose, onSeccionCreated }
                                 <button type="button" onClick={agregarHorario} style={{ backgroundColor: '#4caf50', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', padding: '0 10px' }}>+</button>
                             </div>
 
-                            {/* 🆕 AVISO DE VALIDACIÓN */}
                             {horarios.length > 0 && (
                                 <div style={{ backgroundColor: '#e8f5e9', padding: '8px', borderRadius: '4px', marginBottom: '10px', fontSize: '0.85em', color: '#2e7d32' }}>
                                     ✅ {horarios.length} horario{horarios.length !== 1 ? 's' : ''} agregado{horarios.length !== 1 ? 's' : ''}
                                 </div>
                             )}
 
-                            {/* Lista de horarios agregados */}
                             <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
                                 {horarios.map((h, idx) => (
                                     <li key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: 'white', padding: '5px', marginBottom: '5px', border: '1px solid #ddd', borderRadius: '4px', fontSize: '0.85em' }}>
@@ -255,7 +257,21 @@ export default function CreateSeccionModal({ isOpen, onClose, onSeccionCreated }
 
                         <label> DNI Profesor* <input type="text" value={profesorDni} onChange={(e) => setProfesorDni(e.target.value)} required /> </label>
 
-                        {error && <div className="auth-error" style={{ color: '#d32f2f', marginTop: '10px' }}>{error}</div>}
+                        {/* 🛑 AQUI SE MUESTRA EL ERROR CLARO */}
+                        {error && (
+                            <div className="auth-error" style={{ 
+                                color: '#d32f2f', 
+                                marginTop: '15px', 
+                                padding: '10px', 
+                                backgroundColor: '#ffebee', 
+                                borderRadius: '4px',
+                                border: '1px solid #ffcdd2',
+                                fontWeight: 'bold',
+                                textAlign: 'center'
+                            }}>
+                                {error}
+                            </div>
+                        )}
 
                         <div className="modal-actions">
                             <button type="submit" className="btn-submit" disabled={loading}> {loading ? 'Creando...' : 'Crear Sección'} </button>

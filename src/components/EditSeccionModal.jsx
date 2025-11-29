@@ -2,7 +2,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 
-// URL base (asegúrate de que coincida con tu configuración)
 const BASE_URL = 'https://plataforma-edu-back-gpcsh9h7fddkfvfb.chilecentral-01.azurewebsites.net';
 
 export default function EditSeccionModal({ isOpen, onClose, seccionToEdit, onSeccionUpdated }) {
@@ -15,48 +14,35 @@ export default function EditSeccionModal({ isOpen, onClose, seccionToEdit, onSec
     const [fechaFin, setFechaFin] = useState('');
     const [cursoId, setCursoId] = useState('');
     const [profesorDni, setProfesorDni] = useState('');
-
-    // 🕒 ESTADO PARA HORARIOS MÚLTIPLES
     const [horarios, setHorarios] = useState([]);
-    
-    // Estados temporales para agregar un horario
     const [tempDia, setTempDia] = useState('MONDAY');
     const [tempInicio, setTempInicio] = useState('');
     const [tempFin, setTempFin] = useState('');
-
     const [cursos, setCursos] = useState([]);
     const [loading, setLoading] = useState(false);
     const [loadingCursos, setLoadingCursos] = useState(false);
     const [error, setError] = useState(null);
     const nombreInputRef = useRef(null);
 
-    // Helper para formatear fecha de ISO (2025-01-01T00:00...) a Input (2025-01-01)
     const formatDateForInput = (isoDate) => {
         if (!isoDate) return '';
         return isoDate.split('T')[0];
     };
 
-    // 1. CARGAR DATOS AL ABRIR EL MODAL
     useEffect(() => {
         if (isOpen && seccionToEdit) {
             cargarCursos();
-            
-            // Rellenar formulario con datos existentes
             setNombre(seccionToEdit.nombre || '');
             setNivelSeccion(seccionToEdit.nivelSeccion || 'SECUNDARIA');
-            
-            // Extraer solo el número del grado si viene como "1º Grado"
             const gradoNum = seccionToEdit.gradoSeccion ? seccionToEdit.gradoSeccion.replace(/\D/g, '') : '';
             setGradoSeccion(gradoNum);
-            
             setAula(seccionToEdit.aula || '');
             setCapacidad(seccionToEdit.capacidad || 30);
             setFechaInicio(formatDateForInput(seccionToEdit.fechaInicio));
             setFechaFin(formatDateForInput(seccionToEdit.fechaFin));
             setCursoId(seccionToEdit.cursoId || '');
-            setProfesorDni(seccionToEdit.dniProfesor || ''); // Ojo: verifica si tu backend devuelve 'dniProfesor' o 'profesorDni'
+            setProfesorDni(seccionToEdit.dniProfesor || ''); 
             setHorarios(seccionToEdit.horarios || []);
-            
             setError(null);
             setTimeout(() => nombreInputRef.current?.focus(), 0);
         }
@@ -74,8 +60,6 @@ export default function EditSeccionModal({ isOpen, onClose, seccionToEdit, onSec
         }
     };
 
-    // --- Funciones para Horarios (Igual que en Create) ---
-
     const validarCruceHorarioLocal = (nuevoHorario) => {
         return horarios.some(h => {
             if (h.diaSemana !== nuevoHorario.diaSemana) return false;
@@ -92,27 +76,21 @@ export default function EditSeccionModal({ isOpen, onClose, seccionToEdit, onSec
             alert("Complete los campos del horario");
             return;
         }
-
         if (tempInicio >= tempFin) {
             alert("La hora de inicio debe ser anterior a la de fin");
             return;
         }
-
-        // Asegurar formato HH:mm:ss
         const fmtInicio = tempInicio.length === 5 ? tempInicio + ":00" : tempInicio;
         const fmtFin = tempFin.length === 5 ? tempFin + ":00" : tempFin;
-
         const nuevoHorario = {
             diaSemana: tempDia,
             horaInicio: fmtInicio, 
             horaFin: fmtFin
         };
-
         if (validarCruceHorarioLocal(nuevoHorario)) {
             alert(`⚠️ Error: Ya hay un horario asignado el ${tempDia} que choca con ${tempInicio} - ${tempFin}`);
             return;
         }
-
         setHorarios([...horarios, nuevoHorario]);
         setTempInicio('');
         setTempFin('');
@@ -124,7 +102,6 @@ export default function EditSeccionModal({ isOpen, onClose, seccionToEdit, onSec
         setHorarios(nuevos);
     };
 
-    // --- Lógica de Filtrado ---
     const cursosFiltrados = cursos.filter(curso => (curso.nivelDestino || curso.nivel) === nivelSeccion);
     
     const obtenerOpcionesGrado = () => {
@@ -156,7 +133,7 @@ export default function EditSeccionModal({ isOpen, onClose, seccionToEdit, onSec
         }
 
         const payload = {
-            id: seccionToEdit.id, // Importante enviar ID si el backend lo requiere en el body
+            id: seccionToEdit.id,
             nombre: nombre.trim(),
             nivelSeccion: nivelSeccion,
             gradoSeccion: `${gradoSeccion}º Grado`,
@@ -170,14 +147,25 @@ export default function EditSeccionModal({ isOpen, onClose, seccionToEdit, onSec
         };
 
         try {
-            // 🔄 CAMBIO CLAVE: PUT request al endpoint con ID
             const response = await axios.put(`${BASE_URL}/api/secciones/${seccionToEdit.id}`, payload, { withCredentials: true });
-            
-            // Notificar al padre
             onSeccionUpdated(response.data);
             onClose();
         } catch (err) {
-            setError(err.response?.data?.message || 'Error al actualizar la sección');
+            // 🚨 MANEJO DE ERROR MEJORADO 🚨
+            const msg = err.response?.data?.message || '';
+            console.error("Error backend:", msg);
+
+            if (
+                msg.toLowerCase().includes('profesor') || 
+                msg.toLowerCase().includes('horario') || 
+                msg.toLowerCase().includes('cruce') ||
+                msg.toLowerCase().includes('conflict') ||
+                msg.toLowerCase().includes('overlap')
+            ) {
+                setError('⛔ NO SE PUEDE ACTUALIZAR: El profesor tiene un cruce de horarios con otra sección.');
+            } else {
+                setError(msg || 'Error al actualizar la sección');
+            }
         } finally {
             setLoading(false);
         }
@@ -188,7 +176,6 @@ export default function EditSeccionModal({ isOpen, onClose, seccionToEdit, onSec
             <div className="modal fixed-modal" style={{ maxWidth: '600px' }}>
                 <button className="modal-close" onClick={onClose}>×</button>
                 <div className="modal-body">
-                    {/* TÍTULO CAMBIADO */}
                     <h2 className="modal-title">✏️ Editar Sección: {seccionToEdit.codigo}</h2>
 
                     <form className="auth-form" onSubmit={handleSubmit} noValidate>
@@ -217,7 +204,6 @@ export default function EditSeccionModal({ isOpen, onClose, seccionToEdit, onSec
                             <label> Fin* <input type="date" value={fechaFin} onChange={(e) => setFechaFin(e.target.value)} required /> </label>
                         </div>
 
-                        {/* 🕒 SECCIÓN DE HORARIOS */}
                         <div style={{ marginTop: '15px', padding: '10px', backgroundColor: '#f9f9f9', borderRadius: '4px', border: '1px solid #eee' }}>
                             <h4 style={{ margin: '0 0 10px 0', fontSize: '0.9em' }}>🕒 Horarios Semanales</h4>
                             
@@ -262,10 +248,23 @@ export default function EditSeccionModal({ isOpen, onClose, seccionToEdit, onSec
 
                         <label> DNI Profesor* <input type="text" value={profesorDni} onChange={(e) => setProfesorDni(e.target.value)} required /> </label>
 
-                        {error && <div className="auth-error" style={{ color: '#d32f2f', marginTop: '10px' }}>{error}</div>}
+                        {/* 🛑 AQUI SE MUESTRA EL ERROR CLARO */}
+                        {error && (
+                            <div className="auth-error" style={{ 
+                                color: '#d32f2f', 
+                                marginTop: '15px', 
+                                padding: '10px', 
+                                backgroundColor: '#ffebee', 
+                                borderRadius: '4px',
+                                border: '1px solid #ffcdd2',
+                                fontWeight: 'bold',
+                                textAlign: 'center'
+                            }}>
+                                {error}
+                            </div>
+                        )}
 
                         <div className="modal-actions">
-                            {/* BOTÓN ACTUALIZAR */}
                             <button type="submit" className="btn-submit" disabled={loading} style={{ backgroundColor: '#f57c00' }}> 
                                 {loading ? 'Guardando...' : 'Guardar Cambios'} 
                             </button>

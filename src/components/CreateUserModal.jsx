@@ -3,11 +3,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import '../styles/CreateUserModal.css';
 
-// ✅ URL CONSTANTE DEL BACKEND
 const BASE_URL = 'https://plataforma-edu-back-gpcsh9h7fddkfvfb.chilecentral-01.azurewebsites.net';
 
 export default function CreateUserModal({ isOpen, onClose, onUserCreated }) {
-  // --- Estados Base ---
   const [nombre, setNombre] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -16,7 +14,6 @@ export default function CreateUserModal({ isOpen, onClose, onUserCreated }) {
   const [error, setError] = useState(null);
   const nameInputRef = useRef(null); 
 
-  // --- Estados Perfiles ---
   const [dniAlumno, setDniAlumno] = useState('');
   const [grado, setGrado] = useState(''); 
   const [nivel, setNivel] = useState('SECUNDARIA');
@@ -25,7 +22,21 @@ export default function CreateUserModal({ isOpen, onClose, onUserCreated }) {
   const [telefono, setTelefono] = useState('');
   const [experiencia, setExperiencia] = useState('');
 
-  // --- Limpiar formulario ---
+  // --- Lógica de Grados Dinámicos ---
+  const obtenerOpcionesGrado = () => {
+      switch (nivel) {
+          case 'INICIAL': return ['1', '2', '3'];
+          case 'PRIMARIA': return ['1', '2', '3', '4', '5', '6'];
+          case 'SECUNDARIA': return ['1', '2', '3', '4', '5'];
+          default: return [];
+      }
+  };
+
+  const handleNivelChange = (e) => {
+      setNivel(e.target.value);
+      setGrado(''); // Resetear grado al cambiar nivel
+  };
+
   useEffect(() => {
     if (isOpen) {
       setNombre(''); setEmail(''); setPassword(''); setRol('ALUMNO');
@@ -46,39 +57,37 @@ export default function CreateUserModal({ isOpen, onClose, onUserCreated }) {
 
     const API_URL = `${BASE_URL}/api/usuarios/crear`;
     
-    // --- 1. Validaciones Previas (Evitar error 400 por validación DTO) ---
     if (password.length < 6) {
         setError('La contraseña debe tener al menos 6 caracteres.');
         setLoading(false);
         return;
     }
 
+    // Formatear grado para enviar (Ej: "5º Grado")
+    const gradoFinal = grado ? `${grado}º Grado` : '';
+
     const payload = {
       nombre: nombre.trim(),
       email: email.trim(),
       password: password,
-      rol: rol, // Se envía el valor del select
+      rol: rol,
     };
 
-    // --- Validación Alumno ---
     if (rol === 'ALUMNO') {
       if (!dniAlumno.trim() || dniAlumno.length < 8) {
         setError('El DNI del alumno debe tener al menos 8 caracteres.');
         setLoading(false);
         return;
       }
-      if (!grado.trim() || !nivel) {
+      if (!grado || !nivel) {
         setError('Grado y Nivel son obligatorios.');
         setLoading(false);
         return;
       }
       payload.dniAlumno = dniAlumno.trim();
       payload.nivel = nivel;
-      payload.grado = grado.trim();
-    }
-    
-    // --- Validación Profesor ---
-    else if (rol === 'PROFESOR') {
+      payload.grado = gradoFinal; // Usamos el grado formateado
+    } else if (rol === 'PROFESOR') {
       if (!dniProfesor.trim() || dniProfesor.length < 8) {
         setError('El DNI del profesor debe tener al menos 8 caracteres.');
         setLoading(false);
@@ -89,27 +98,19 @@ export default function CreateUserModal({ isOpen, onClose, onUserCreated }) {
       if (experiencia.trim()) payload.experiencia = experiencia.trim();
     }
     
-    console.log("Enviando payload:", payload);
-
     try {
-      const response = await axios.post(API_URL, payload, {
-          withCredentials: true 
-      }); 
-      
+      const response = await axios.post(API_URL, payload, { withCredentials: true }); 
       onUserCreated(response.data);
       onClose(); 
-
     } catch (err) {
       console.error("Error al crear usuario:", err);
       if (err.response) {
-         // Capturar errores específicos
          if (err.response.status === 400) {
-            // Error de validación o JSON mal formado
             const backendMsg = err.response.data.message || "";
             if (backendMsg.includes("JSON parse error")) {
-                setError("Error interno: El Rol enviado no es válido.");
+                setError("Error interno: Datos inválidos.");
             } else {
-                setError(backendMsg || "Datos inválidos (400). Verifica DNI y Contraseña.");
+                setError(backendMsg || "Datos inválidos (400).");
             }
          } else if (err.response.status === 401 || err.response.status === 403) {
             setError("No tienes permisos de Administrador.");
@@ -139,7 +140,6 @@ export default function CreateUserModal({ isOpen, onClose, onUserCreated }) {
               <select value={rol} onChange={(e) => setRol(e.target.value)} required>
                 <option value="ALUMNO">Alumno</option>
                 <option value="PROFESOR">Profesor</option>
-                {/* ⚠️ ESTE VALOR DEBE SER IDÉNTICO AL ENUM DE JAVA */}
                 <option value="ADMINISTRADOR">Administrador</option> 
               </select>
             </label>
@@ -147,14 +147,24 @@ export default function CreateUserModal({ isOpen, onClose, onUserCreated }) {
             {rol === 'ALUMNO' && (
               <>
                 <label> DNI (Alumno)* <input type="text" value={dniAlumno} onChange={(e) => setDniAlumno(e.target.value)} required placeholder="Mínimo 8 dígitos" /> </label>
+                
+                {/* SELECT DE NIVEL */}
                 <label> Nivel*
-                  <select value={nivel} onChange={(e) => setNivel(e.target.value)} required>
+                  <select value={nivel} onChange={handleNivelChange} required>
                     <option value="INICIAL">Inicial</option>
                     <option value="PRIMARIA">Primaria</option>
                     <option value="SECUNDARIA">Secundaria</option>
                   </select>
                 </label>
-                <label> Grado* <input type="text" value={grado} onChange={(e) => setGrado(e.target.value)} required placeholder="Ej: 5to" /> </label>
+
+                {/* SELECT DE GRADO DINÁMICO */}
+                <label> Grado* <select value={grado} onChange={(e) => setGrado(e.target.value)} required>
+                    <option value="">Selecciona grado</option>
+                    {obtenerOpcionesGrado().map((g) => (
+                      <option key={g} value={g}>{g}º Grado</option>
+                    ))}
+                  </select>
+                </label>
               </>
             )}
 

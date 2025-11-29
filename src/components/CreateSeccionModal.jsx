@@ -3,11 +3,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 
 export default function CreateSeccionModal({ isOpen, onClose, onSeccionCreated }) {
-    // --- Estados del Formulario ---
     const [nombre, setNombre] = useState('');
     const [nivelSeccion, setNivelSeccion] = useState('SECUNDARIA');
     const [gradoSeccion, setGradoSeccion] = useState('');
-    const [turno, setTurno] = useState('MAÑANA');
     const [aula, setAula] = useState('');
     const [capacidad, setCapacidad] = useState(30);
     const [fechaInicio, setFechaInicio] = useState('');
@@ -15,14 +13,20 @@ export default function CreateSeccionModal({ isOpen, onClose, onSeccionCreated }
     const [cursoId, setCursoId] = useState('');
     const [profesorDni, setProfesorDni] = useState('');
 
-    // --- Estados auxiliares ---
+    // 🕒 ESTADO PARA HORARIOS MÚLTIPLES
+    const [horarios, setHorarios] = useState([]); 
+    
+    // Estados temporales para agregar un horario
+    const [tempDia, setTempDia] = useState('MONDAY');
+    const [tempInicio, setTempInicio] = useState('');
+    const [tempFin, setTempFin] = useState('');
+
     const [cursos, setCursos] = useState([]);
     const [loading, setLoading] = useState(false);
     const [loadingCursos, setLoadingCursos] = useState(false);
     const [error, setError] = useState(null);
     const nombreInputRef = useRef(null);
 
-    // --- Cargar cursos al abrir el modal ---
     useEffect(() => {
         if (isOpen) {
             limpiarFormulario();
@@ -35,132 +39,107 @@ export default function CreateSeccionModal({ isOpen, onClose, onSeccionCreated }
         setNombre('');
         setNivelSeccion('SECUNDARIA');
         setGradoSeccion('');
-        setTurno('MAÑANA');
         setAula('');
         setCapacidad(30);
         setFechaInicio('');
         setFechaFin('');
         setCursoId('');
         setProfesorDni('');
+        setHorarios([]); // Limpiar horarios
         setError(null);
     };
 
     const cargarCursos = async () => {
         setLoadingCursos(true);
         try {
-            // ✅ URL ORIGINAL NO MODIFICADA
-            const response = await axios.get('https://plataforma-edu-back-gpcsh9h7fddkfvfb.chilecentral-01.azurewebsites.net/api/cursos', {
-                withCredentials: true
-            });
+            const response = await axios.get('https://plataforma-edu-back-gpcsh9h7fddkfvfb.chilecentral-01.azurewebsites.net/api/cursos', { withCredentials: true });
             setCursos(response.data);
         } catch (err) {
             console.error('Error al cargar cursos:', err);
-            setError('No se pudieron cargar los cursos disponibles');
         } finally {
             setLoadingCursos(false);
         }
     };
 
-    // --- 🟢 LÓGICA NUEVA: Filtrado de Cursos y Grados ---
+    // --- Funciones para Horarios ---
+    const agregarHorario = () => {
+        if (!tempDia || !tempInicio || !tempFin) {
+            alert("Complete los campos del horario");
+            return;
+        }
+        if (tempInicio >= tempFin) {
+            alert("La hora de inicio debe ser anterior a la de fin");
+            return;
+        }
 
-    // 1. Filtrar cursos para que solo salgan los del nivel seleccionado
-    const cursosFiltrados = cursos.filter(curso => 
-        (curso.nivelDestino || curso.nivel) === nivelSeccion
-    );
+        const nuevoHorario = {
+            diaSemana: tempDia,
+            horaInicio: tempInicio + ":00", // Backend espera HH:mm:ss
+            horaFin: tempFin + ":00"
+        };
 
-    // 2. Definir los rangos de grados según el nivel
+        setHorarios([...horarios, nuevoHorario]);
+        
+        // Resetear campos temporales
+        setTempInicio('');
+        setTempFin('');
+    };
+
+    const eliminarHorario = (index) => {
+        const nuevos = [...horarios];
+        nuevos.splice(index, 1);
+        setHorarios(nuevos);
+    };
+
+    // --- Lógica de Filtrado ---
+    const cursosFiltrados = cursos.filter(curso => (curso.nivelDestino || curso.nivel) === nivelSeccion);
     const obtenerOpcionesGrado = () => {
         switch (nivelSeccion) {
-            case 'INICIAL':
-                return ['1', '2', '3']; // 1 a 3
-            case 'PRIMARIA':
-                return ['1', '2', '3', '4', '5', '6']; // 1 a 6
-            case 'SECUNDARIA':
-                return ['1', '2', '3', '4', '5']; // 1 a 5
-            default:
-                return [];
+            case 'INICIAL': return ['1', '2', '3'];
+            case 'PRIMARIA': return ['1', '2', '3', '4', '5', '6'];
+            case 'SECUNDARIA': return ['1', '2', '3', '4', '5'];
+            default: return [];
         }
     };
 
-    // 3. Manejador para cambio de nivel (Resetea curso y grado para evitar errores)
     const handleNivelChange = (e) => {
         setNivelSeccion(e.target.value);
-        setCursoId('');     // Limpia el curso seleccionado porque cambia la lista
-        setGradoSeccion(''); // Limpia el grado porque cambia el rango
+        setCursoId('');
+        setGradoSeccion('');
     };
 
-    if (!isOpen) {
-        return null;
-    }
+    if (!isOpen) return null;
 
-    // --- Manejo de Envío ---
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
         setError(null);
 
-        // ✅ URL ORIGINAL NO MODIFICADA
-        const API_URL = 'https://plataforma-edu-back-gpcsh9h7fddkfvfb.chilecentral-01.azurewebsites.net/api/secciones';
-
-        // Formateamos el grado para enviarlo (Ej: "5º Grado" o solo "5" según prefieras)
-        // Aquí lo envío formateado para que se vea bien en la tabla luego.
-        const gradoFinal = gradoSeccion ? `${gradoSeccion}º Grado` : '';
+        if (horarios.length === 0) {
+            setError("Debe agregar al menos un horario.");
+            setLoading(false);
+            return;
+        }
 
         const payload = {
             nombre: nombre.trim(),
             nivelSeccion: nivelSeccion,
-            gradoSeccion: gradoFinal, 
-            turno: turno,
+            gradoSeccion: `${gradoSeccion}º Grado`,
             aula: aula.trim(),
             capacidad: parseInt(capacidad),
             fechaInicio: fechaInicio,
             fechaFin: fechaFin,
             cursoId: parseInt(cursoId),
-            profesorDni: profesorDni.trim()
+            profesorDni: profesorDni.trim(),
+            horarios: horarios // Enviamos la lista
         };
 
-        // Validación
-        if (!payload.nombre || !gradoSeccion || !payload.fechaInicio || 
-            !payload.fechaFin || !payload.cursoId || !payload.profesorDni) {
-            setError('Todos los campos obligatorios deben ser completados');
-            setLoading(false);
-            return;
-        }
-
-        if (payload.capacidad < 1 || payload.capacidad > 100) {
-            setError('La capacidad debe estar entre 1 y 100');
-            setLoading(false);
-            return;
-        }
-
         try {
-            console.log('Enviando solicitud para crear sección:', payload);
-
-            const response = await axios.post(API_URL, payload, {
-                withCredentials: true,
-                headers: {
-                    'Content-Type': 'application/json',
-                }
-            });
-
-            console.log('Sección creada exitosamente:', response.data);
+            const response = await axios.post('https://plataforma-edu-back-gpcsh9h7fddkfvfb.chilecentral-01.azurewebsites.net/api/secciones', payload, { withCredentials: true });
             onSeccionCreated(response.data);
             onClose();
-
         } catch (err) {
-            console.error('Error al crear sección:', err);
-            // ... (Manejo de errores original)
-            if (err.response) {
-                const status = err.response.status;
-                const errorData = err.response.data;
-                if (status === 400 && errorData?.message) {
-                    setError(errorData.message);
-                } else {
-                    setError(errorData?.message || 'Error al crear la sección');
-                }
-            } else {
-                setError('Error de conexión');
-            }
+            setError(err.response?.data?.message || 'Error al crear la sección');
         } finally {
             setLoading(false);
         }
@@ -168,187 +147,82 @@ export default function CreateSeccionModal({ isOpen, onClose, onSeccionCreated }
 
     return (
         <div className="modal-overlay" onClick={(e) => e.currentTarget === e.target && onClose()}>
-            <div className="modal fixed-modal" role="dialog" aria-modal="true" aria-labelledby="create-seccion-title">
-                <button className="modal-close" onClick={onClose} aria-label="Cerrar">×</button>
+            <div className="modal fixed-modal" style={{ maxWidth: '600px' }}> {/* Un poco más ancho */}
+                <button className="modal-close" onClick={onClose}>×</button>
                 <div className="modal-body">
-                    <h2 id="create-seccion-title" className="modal-title">Crear Nueva Sección</h2>
-
-                    <p style={{
-                        fontSize: '0.9em',
-                        color: '#666',
-                        marginBottom: '20px',
-                        padding: '10px',
-                        backgroundColor: '#f5f5f5',
-                        borderRadius: '4px',
-                        borderLeft: '3px solid #2196F3'
-                    }}>
-                        ℹ️ El código de la sección se generará automáticamente.
-                    </p>
+                    <h2 className="modal-title">Crear Nueva Sección</h2>
 
                     <form className="auth-form" onSubmit={handleSubmit} noValidate>
-                        <label>
-                            Nombre de la Sección*
-                            <input
-                                ref={nombreInputRef}
-                                type="text"
-                                value={nombre}
-                                onChange={(e) => setNombre(e.target.value)}
-                                placeholder="Ej: Matemática - 5to A - Mañana"
-                                required
-                            />
-                        </label>
+                        <label> Nombre* <input ref={nombreInputRef} type="text" value={nombre} onChange={(e) => setNombre(e.target.value)} required /> </label>
 
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
-                            <label>
-                                Nivel*
-                                <select
-                                    value={nivelSeccion}
-                                    onChange={handleNivelChange}
-                                    required
-                                >
-                                    <option value="INICIAL">Inicial</option>
-                                    <option value="PRIMARIA">Primaria</option>
-                                    <option value="SECUNDARIA">Secundaria</option>
-                                </select>
-                            </label>
+                            <label> Nivel* <select value={nivelSeccion} onChange={handleNivelChange} required>
+                                <option value="INICIAL">Inicial</option>
+                                <option value="PRIMARIA">Primaria</option>
+                                <option value="SECUNDARIA">Secundaria</option>
+                            </select></label>
 
-                            <label>
-                                Grado*
-                                <select
-                                    value={gradoSeccion}
-                                    onChange={(e) => setGradoSeccion(e.target.value)}
-                                    required
-                                >
-                                    <option value="">Selecciona</option>
-                                    {obtenerOpcionesGrado().map((num) => (
-                                        <option key={num} value={num}>{num}º</option>
-                                    ))}
-                                </select>
-                            </label>
+                            <label> Grado* <select value={gradoSeccion} onChange={(e) => setGradoSeccion(e.target.value)} required>
+                                <option value="">Selecciona</option>
+                                {obtenerOpcionesGrado().map((num) => <option key={num} value={num}>{num}º</option>)}
+                            </select></label>
                         </div>
 
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
-                            <label>
-                                Turno*
-                                <select
-                                    value={turno}
-                                    onChange={(e) => setTurno(e.target.value)}
-                                    required
-                                >
-                                    <option value="MAÑANA">Mañana</option>
-                                    <option value="TARDE">Tarde</option>
-                                    <option value="NOCHE">Noche</option>
-                                </select>
-                            </label>
-
-                            <label>
-                                Aula (Libre)
-                                <input
-                                    type="text"
-                                    value={aula}
-                                    onChange={(e) => setAula(e.target.value)}
-                                    placeholder="Ej: Aula 101"
-                                />
-                            </label>
+                            <label> Aula <input type="text" value={aula} onChange={(e) => setAula(e.target.value)} placeholder="Ej: 101" /> </label>
+                            <label> Capacidad* <input type="number" value={capacidad} onChange={(e) => setCapacidad(e.target.value)} min="1" required /> </label>
                         </div>
-
-                        <label>
-                            Capacidad Máxima*
-                            <input
-                                type="number"
-                                value={capacidad}
-                                onChange={(e) => setCapacidad(e.target.value)}
-                                min="1"
-                                max="100"
-                                required
-                            />
-                        </label>
 
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
-                            <label>
-                                Fecha de Inicio*
-                                <input
-                                    type="date"
-                                    value={fechaInicio}
-                                    onChange={(e) => setFechaInicio(e.target.value)}
-                                    required
-                                />
-                            </label>
-
-                            <label>
-                                Fecha de Fin*
-                                <input
-                                    type="date"
-                                    value={fechaFin}
-                                    onChange={(e) => setFechaFin(e.target.value)}
-                                    required
-                                />
-                            </label>
+                            <label> Inicio* <input type="date" value={fechaInicio} onChange={(e) => setFechaInicio(e.target.value)} required /> </label>
+                            <label> Fin* <input type="date" value={fechaFin} onChange={(e) => setFechaFin(e.target.value)} required /> </label>
                         </div>
 
-                        <label>
-                            Curso*
-                            <select
-                                value={cursoId}
-                                onChange={(e) => setCursoId(e.target.value)}
-                                required
-                                disabled={loadingCursos}
-                            >
-                                <option value="">
-                                    {loadingCursos ? 'Cargando cursos...' : 
-                                     cursosFiltrados.length === 0 ? 'No hay cursos para este nivel' : 'Selecciona un curso'}
-                                </option>
-                                {cursosFiltrados.map((curso) => (
-                                    <option key={curso.id} value={curso.id}>
-                                        {curso.codigo} - {curso.titulo}
-                                    </option>
+                        {/* 🕒 SECCIÓN DE HORARIOS */}
+                        <div style={{ marginTop: '15px', padding: '10px', backgroundColor: '#f9f9f9', borderRadius: '4px', border: '1px solid #eee' }}>
+                            <h4 style={{ margin: '0 0 10px 0', fontSize: '0.9em' }}>Horarios Semanales</h4>
+                            
+                            <div style={{ display: 'flex', gap: '5px', marginBottom: '10px' }}>
+                                <select value={tempDia} onChange={(e) => setTempDia(e.target.value)} style={{ flex: 2 }}>
+                                    <option value="MONDAY">Lunes</option>
+                                    <option value="TUESDAY">Martes</option>
+                                    <option value="WEDNESDAY">Miércoles</option>
+                                    <option value="THURSDAY">Jueves</option>
+                                    <option value="FRIDAY">Viernes</option>
+                                    <option value="SATURDAY">Sábado</option>
+                                </select>
+                                <input type="time" value={tempInicio} onChange={(e) => setTempInicio(e.target.value)} style={{ flex: 1 }} />
+                                <input type="time" value={tempFin} onChange={(e) => setTempFin(e.target.value)} style={{ flex: 1 }} />
+                                <button type="button" onClick={agregarHorario} style={{ backgroundColor: '#4caf50', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', padding: '0 10px' }}>+</button>
+                            </div>
+
+                            {/* Lista de horarios agregados */}
+                            <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                                {horarios.map((h, idx) => (
+                                    <li key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: 'white', padding: '5px', marginBottom: '5px', border: '1px solid #ddd', borderRadius: '4px', fontSize: '0.85em' }}>
+                                        <span>
+                                            <strong>{h.diaSemana}:</strong> {h.horaInicio.substring(0, 5)} - {h.horaFin.substring(0, 5)}
+                                        </span>
+                                        <button type="button" onClick={() => eliminarHorario(idx)} style={{ color: 'red', border: 'none', background: 'none', cursor: 'pointer' }}>✖</button>
+                                    </li>
                                 ))}
+                                {horarios.length === 0 && <li style={{ color: '#999', textAlign: 'center', fontSize: '0.8em' }}>No hay horarios asignados</li>}
+                            </ul>
+                        </div>
+
+                        <label style={{ marginTop: '15px' }}> Curso* <select value={cursoId} onChange={(e) => setCursoId(e.target.value)} required disabled={loadingCursos}>
+                                <option value="">Selecciona un curso</option>
+                                {cursosFiltrados.map((curso) => <option key={curso.id} value={curso.id}>{curso.codigo} - {curso.titulo}</option>)}
                             </select>
                         </label>
 
-                        <label>
-                            DNI del Profesor*
-                            <input
-                                type="text"
-                                value={profesorDni}
-                                onChange={(e) => setProfesorDni(e.target.value)}
-                                placeholder="Ej: 12345678"
-                                required
-                            />
-                            <small style={{ display: 'block', marginTop: '5px', color: '#666', fontSize: '0.85em' }}>
-                                Ingresa el DNI del profesor asignado a esta sección
-                            </small>
-                        </label>
+                        <label> DNI Profesor* <input type="text" value={profesorDni} onChange={(e) => setProfesorDni(e.target.value)} required /> </label>
 
-                        {error && (
-                            <div className="auth-error" style={{
-                                color: '#d32f2f',
-                                backgroundColor: '#ffebee',
-                                padding: '12px',
-                                borderRadius: '4px',
-                                marginTop: '10px',
-                                border: '1px solid #ef5350'
-                            }}>
-                                {error}
-                            </div>
-                        )}
+                        {error && <div className="auth-error" style={{ color: '#d32f2f', marginTop: '10px' }}>{error}</div>}
 
-                        <div className="modal-actions" style={{ marginTop: '20px' }}>
-                            <button
-                                type="submit"
-                                className="btn-submit"
-                                disabled={loading || loadingCursos}
-                            >
-                                {loading ? 'Creando...' : 'Crear Sección'}
-                            </button>
-                            <button
-                                type="button"
-                                className="btn-cancel"
-                                onClick={onClose}
-                                disabled={loading}
-                            >
-                                Cancelar
-                            </button>
+                        <div className="modal-actions">
+                            <button type="submit" className="btn-submit" disabled={loading}> {loading ? 'Creando...' : 'Crear Sección'} </button>
+                            <button type="button" className="btn-cancel" onClick={onClose} disabled={loading}> Cancelar </button>
                         </div>
                     </form>
                 </div>

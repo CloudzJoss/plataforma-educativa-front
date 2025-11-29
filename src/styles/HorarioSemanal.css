@@ -1,0 +1,103 @@
+.horario-container {
+    display: flex;
+    flex-direction: column;
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    overflow: hidden;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    max-width: 100%;
+    overflow-x: auto; /* Scroll horizontal en móviles */
+}
+
+/* --- Cabecera (Días) --- */
+.horario-header {
+    display: grid;
+    grid-template-columns: 60px repeat(6, 1fr); /* 60px para la hora, el resto para los 6 días */
+    border-bottom: 1px solid #e0e0e0;
+    background-color: #f9fafb;
+}
+
+.day-header {
+    padding: 10px;
+    text-align: center;
+    font-weight: bold;
+    color: #555;
+    border-left: 1px solid #e0e0e0;
+}
+
+/* --- Cuerpo (Grilla) --- */
+.horario-body {
+    display: grid;
+    grid-template-columns: 60px repeat(6, 1fr);
+    position: relative;
+    /* Altura basada en horas: (22 - 7) horas * 60px/hora + padding */
+    height: 900px; 
+    overflow-y: auto;
+}
+
+/* Columna de Horas (Izquierda) */
+.time-column {
+    background-color: #fff;
+    border-right: 1px solid #e0e0e0;
+}
+
+.time-slot {
+    height: 60px; /* ⚠️ IMPORTANTE: Debe coincidir con el cálculo en JS */
+    position: relative;
+    text-align: right;
+    padding-right: 10px;
+    color: #888;
+    font-size: 0.8rem;
+    transform: translateY(-10px); /* Ajuste visual para alinear el texto con la línea */
+}
+
+/* Columnas de Días */
+.day-column {
+    position: relative;
+    border-left: 1px solid #e0e0e0;
+    background-color: white;
+}
+
+/* Líneas horizontales de fondo */
+.grid-cell {
+    height: 60px; /* ⚠️ IMPORTANTE: Debe coincidir */
+    border-bottom: 1px solid #f0f0f0;
+    box-sizing: border-box;
+}
+
+/* --- Tarjetas de Eventos (Bloques de Clase) --- */
+.event-card {
+    position: absolute;
+    width: 94%; /* Dejar un pequeño margen lateral */
+    left: 3%;
+    border-radius: 4px;
+    padding: 4px;
+    font-size: 0.75rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.1s;
+    z-index: 10;
+    box-sizing: border-box;
+    color: #333;
+}
+
+.event-card:hover {
+    transform: scale(1.02);
+    z-index: 20;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+}
+
+.event-title {
+    font-weight: bold;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 2px;
+}
+
+.event-info, .event-aula {
+    font-size: 0.7rem;
+    color: #555;
+}

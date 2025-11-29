@@ -11,14 +11,12 @@ export default function Sidebar({ isOpen, onClose }) {
 
     const handleLogout = async () => {
         console.warn("🔒 Cerrando sesión...");
-
         try {
             await axios.post('/api/auth/logout');
             console.log("Cookie del backend destruida.");
         } catch (error) {
             console.error("Error al cerrar sesión en el backend:", error);
         }
-
         localStorage.clear();
         onClose();
         navigate('/');
@@ -41,7 +39,6 @@ export default function Sidebar({ isOpen, onClose }) {
 
                 <h2>Menú Principal</h2>
 
-                {/* Mostrar nombre del usuario */}
                 {userName && (
                     <div style={{ 
                         padding: '10px', 
@@ -71,6 +68,11 @@ export default function Sidebar({ isOpen, onClose }) {
                 {/* Enlaces de PROFESOR */}
                 {userRole === 'PROFESOR' && (
                     <>
+                        {/* 👇 NUEVO BOTÓN PARA PROFESOR */}
+                        <Link to="/dashboard/mi-horario" onClick={onClose}>
+                            📅 Ver Horario
+                        </Link>
+
                         <Link to="/dashboard/mis-secciones" onClick={onClose}>
                             📖 Mis Secciones
                         </Link>
@@ -80,6 +82,11 @@ export default function Sidebar({ isOpen, onClose }) {
                 {/* Enlaces de ALUMNO */}
                 {userRole === 'ALUMNO' && (
                     <>
+                        {/* 👇 NUEVO BOTÓN PARA ALUMNO */}
+                        <Link to="/dashboard/mi-horario" onClick={onClose}>
+                            📅 Mi Horario Visual
+                        </Link>
+
                         <Link to="/dashboard/mis-matriculas" onClick={onClose}>
                             📚 Mis Cursos
                         </Link>

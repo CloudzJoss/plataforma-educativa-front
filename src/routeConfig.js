@@ -1,20 +1,20 @@
 // src/routeConfig.js
 import React from 'react';
 
-// Importaciones de Páginas
+// ... tus otras importaciones ...
 import HomePage from "./pages/HomePage.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
 import GestionUsuarios from "./pages/GestionUsuarios.jsx";
 import GestionCursos from "./pages/GestionCursos.jsx";
 import GestionSecciones from "./pages/GestionSecciones.jsx";
 import MisSeccionesProfesor from "./pages/MisSeccionesProfesor.jsx";
-
-// 👇 NUEVAS PÁGINAS PARA ALUMNOS
 import MisMatriculas from "./pages/MisMatriculas.jsx";
 import SeccionesDisponibles from "./pages/SeccionesDisponibles.jsx";
-
 import ProtectedRoute from "./security/ProtectedRoute.jsx";
 import DashboardHomeRouter from "./pages/DashboardHomeRouter.jsx";
+
+// 👇 IMPORTA LA NUEVA PÁGINA
+import VerHorario from "./pages/VerHorario.jsx";
 
 const routeConfig = [
     {
@@ -32,6 +32,15 @@ const routeConfig = [
             {
                 index: true,
                 element: <DashboardHomeRouter />
+            },
+            // --- RUTAS COMUNES (Alumno y Profesor) ---
+            {
+                path: "mi-horario", // 📅 NUEVA RUTA SOLITARIA
+                element: (
+                    <ProtectedRoute roles={["ALUMNO", "PROFESOR"]}>
+                        <VerHorario />
+                    </ProtectedRoute>
+                )
             },
             // --- RUTAS DE ADMINISTRADOR ---
             {

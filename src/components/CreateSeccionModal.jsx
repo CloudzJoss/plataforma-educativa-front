@@ -1,4 +1,3 @@
-// src/components/CreateSeccionModal.jsx
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 
@@ -14,8 +13,8 @@ export default function CreateSeccionModal({ isOpen, onClose, onSeccionCreated }
     const [profesorDni, setProfesorDni] = useState('');
 
     // 🕒 ESTADO PARA HORARIOS MÚLTIPLES
-    const [horarios, setHorarios] = useState([]); 
-    
+    const [horarios, setHorarios] = useState([]);
+   
     // Estados temporales para agregar un horario
     const [tempDia, setTempDia] = useState('MONDAY');
     const [tempInicio, setTempInicio] = useState('');
@@ -45,7 +44,7 @@ export default function CreateSeccionModal({ isOpen, onClose, onSeccionCreated }
         setFechaFin('');
         setCursoId('');
         setProfesorDni('');
-        setHorarios([]); // Limpiar horarios
+        setHorarios([]);
         setError(null);
     };
 
@@ -62,11 +61,35 @@ export default function CreateSeccionModal({ isOpen, onClose, onSeccionCreated }
     };
 
     // --- Funciones para Horarios ---
+
+    /**
+     * 🔒 VALIDA QUE EL NUEVO HORARIO NO CHOQUE CON LOS YA AGREGADOS
+     * Lógica: Mismo día + horas que se solapan = conflicto
+     */
+    const validarCruceHorarioLocal = (nuevoHorario) => {
+        return horarios.some(h => {
+            // Misma semana
+            if (h.diaSemana !== nuevoHorario.diaSemana) {
+                return false;
+            }
+
+            // Verificar solapamiento de horas
+            // Conflicto si: (inicioNuevo < finExistente) Y (finNuevo > inicioExistente)
+            const inicioNuevo = nuevoHorario.horaInicio;
+            const finNuevo = nuevoHorario.horaFin;
+            const inicioEx = h.horaInicio;
+            const finEx = h.horaFin;
+
+            return inicioNuevo < finEx && finNuevo > inicioEx;
+        });
+    };
+
     const agregarHorario = () => {
         if (!tempDia || !tempInicio || !tempFin) {
             alert("Complete los campos del horario");
             return;
         }
+
         if (tempInicio >= tempFin) {
             alert("La hora de inicio debe ser anterior a la de fin");
             return;
@@ -78,8 +101,14 @@ export default function CreateSeccionModal({ isOpen, onClose, onSeccionCreated }
             horaFin: tempFin + ":00"
         };
 
+        // 🔒 VALIDAR CRUCE EN FRONTEND
+        if (validarCruceHorarioLocal(nuevoHorario)) {
+            alert(`⚠️ Error: Ya hay un horario asignado el ${tempDia} que choca con ${tempInicio} - ${tempFin}`);
+            return;
+        }
+
         setHorarios([...horarios, nuevoHorario]);
-        
+
         // Resetear campos temporales
         setTempInicio('');
         setTempFin('');
@@ -93,6 +122,7 @@ export default function CreateSeccionModal({ isOpen, onClose, onSeccionCreated }
 
     // --- Lógica de Filtrado ---
     const cursosFiltrados = cursos.filter(curso => (curso.nivelDestino || curso.nivel) === nivelSeccion);
+    
     const obtenerOpcionesGrado = () => {
         switch (nivelSeccion) {
             case 'INICIAL': return ['1', '2', '3'];
@@ -147,7 +177,7 @@ export default function CreateSeccionModal({ isOpen, onClose, onSeccionCreated }
 
     return (
         <div className="modal-overlay" onClick={(e) => e.currentTarget === e.target && onClose()}>
-            <div className="modal fixed-modal" style={{ maxWidth: '600px' }}> {/* Un poco más ancho */}
+            <div className="modal fixed-modal" style={{ maxWidth: '600px' }}>
                 <button className="modal-close" onClick={onClose}>×</button>
                 <div className="modal-body">
                     <h2 className="modal-title">Crear Nueva Sección</h2>
@@ -178,10 +208,10 @@ export default function CreateSeccionModal({ isOpen, onClose, onSeccionCreated }
                             <label> Fin* <input type="date" value={fechaFin} onChange={(e) => setFechaFin(e.target.value)} required /> </label>
                         </div>
 
-                        {/* 🕒 SECCIÓN DE HORARIOS */}
+                        {/* 🕒 SECCIÓN DE HORARIOS CON VALIDACIÓN MEJORADA */}
                         <div style={{ marginTop: '15px', padding: '10px', backgroundColor: '#f9f9f9', borderRadius: '4px', border: '1px solid #eee' }}>
-                            <h4 style={{ margin: '0 0 10px 0', fontSize: '0.9em' }}>Horarios Semanales</h4>
-                            
+                            <h4 style={{ margin: '0 0 10px 0', fontSize: '0.9em' }}>🕒 Horarios Semanales</h4>
+                           
                             <div style={{ display: 'flex', gap: '5px', marginBottom: '10px' }}>
                                 <select value={tempDia} onChange={(e) => setTempDia(e.target.value)} style={{ flex: 2 }}>
                                     <option value="MONDAY">Lunes</option>
@@ -195,6 +225,13 @@ export default function CreateSeccionModal({ isOpen, onClose, onSeccionCreated }
                                 <input type="time" value={tempFin} onChange={(e) => setTempFin(e.target.value)} style={{ flex: 1 }} />
                                 <button type="button" onClick={agregarHorario} style={{ backgroundColor: '#4caf50', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', padding: '0 10px' }}>+</button>
                             </div>
+
+                            {/* 🆕 AVISO DE VALIDACIÓN */}
+                            {horarios.length > 0 && (
+                                <div style={{ backgroundColor: '#e8f5e9', padding: '8px', borderRadius: '4px', marginBottom: '10px', fontSize: '0.85em', color: '#2e7d32' }}>
+                                    ✅ {horarios.length} horario{horarios.length !== 1 ? 's' : ''} agregado{horarios.length !== 1 ? 's' : ''}
+                                </div>
+                            )}
 
                             {/* Lista de horarios agregados */}
                             <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>

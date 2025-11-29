@@ -1,7 +1,6 @@
-// src/pages/MisSeccionesProfesor.jsx
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
-import '../styles/MisSeccionesProfesor.css'; // 👈 Usaremos un CSS específico
+import '../styles/MisSeccionesProfesor.css';
 
 export default function MisSeccionesProfesor() {
     const [secciones, setSecciones] = useState([]);
@@ -12,7 +11,7 @@ export default function MisSeccionesProfesor() {
     const cargarMisSecciones = useCallback(async () => {
         setLoading(true);
         setError(null);
-        
+       
         try {
             console.log('🔍 Cargando secciones del profesor autenticado...');
 
@@ -20,17 +19,17 @@ export default function MisSeccionesProfesor() {
                 `https://plataforma-edu-back-gpcsh9h7fddkfvfb.chilecentral-01.azurewebsites.net/api/secciones/mis-secciones`,
                 { withCredentials: true }
             );
-            
+           
             console.log('✅ Secciones cargadas:', response.data);
             setSecciones(response.data);
-            
+           
         } catch (err) {
             console.error('❌ Error al cargar secciones:', err);
-            
+           
             if (err.response) {
                 const status = err.response.status;
                 const errorData = err.response.data;
-                
+               
                 if (status === 404) {
                     setError('No se encontraron secciones asignadas a tu cuenta.');
                 } else if (status === 401 || status === 403) {
@@ -81,6 +80,19 @@ export default function MisSeccionesProfesor() {
         });
     };
 
+    // 🕒 NUEVA FUNCIÓN: Formatear horarios
+    const formatearHorarios = (horarios) => {
+        if (!horarios || horarios.length === 0) {
+            return 'Sin horarios asignados';
+        }
+
+        return horarios.map((h, idx) => (
+            <div key={idx} style={{ fontSize: '0.85em', marginBottom: '4px', padding: '4px 0' }}>
+                <strong>{h.diaSemana.substring(0, 3)}:</strong> {h.horaInicio.substring(0, 5)} - {h.horaFin.substring(0, 5)}
+            </div>
+        ));
+    };
+
     if (loading) {
         return (
             <div className="mis-secciones-container">
@@ -103,11 +115,11 @@ export default function MisSeccionesProfesor() {
                         <button onClick={cargarMisSecciones} className="btn-retry">
                             🔄 Reintentar
                         </button>
-                        <button 
+                        <button
                             onClick={() => {
                                 localStorage.clear();
                                 window.location.href = '/';
-                            }} 
+                            }}
                             className="btn-logout-error"
                         >
                             🚪 Cerrar Sesión
@@ -188,15 +200,15 @@ export default function MisSeccionesProfesor() {
                                 <div className="card-title-section">
                                     <h3 className="card-title">{seccion.tituloCurso}</h3>
                                     <p className="card-subtitle">
-                                        {seccion.nivelSeccion} - Sección: {seccion.gradoSeccion} - 
+                                        {seccion.nivelSeccion} - Sección: {seccion.gradoSeccion} -
                                         Semestre {new Date(seccion.fechaFin).getFullYear()}
                                     </p>
                                 </div>
-                                <span 
+                                <span
                                     className="turno-badge"
                                     style={{ backgroundColor: getTurnoColor(seccion.turno) }}
                                 >
-                                    {seccion.turno === 'MAÑANA' ? 'Presencial' : 
+                                    {seccion.turno === 'MAÑANA' ? 'Presencial' :
                                      seccion.turno === 'TARDE' ? 'Presencial' : 'Presencial'}
                                 </span>
                             </div>
@@ -207,23 +219,31 @@ export default function MisSeccionesProfesor() {
                                     <span className="info-label">Código:</span>
                                     <span className="info-value">{seccion.codigo}</span>
                                 </div>
+
                                 <div className="info-row">
-                                    <span className="info-label">Ciclo:</span>
-                                    <span className="info-value">
-                                        {seccion.nivelSeccion === 'INICIAL' ? '1' :
-                                         seccion.nivelSeccion === 'PRIMARIA' ? '5' : '8'}
-                                    </span>
+                                    <span className="info-label">Nivel:</span>
+                                    <span className="info-value">{seccion.nivelSeccion}</span>
                                 </div>
+
                                 <div className="info-row">
                                     <span className="info-label">Aula:</span>
                                     <span className="info-value">
                                         {seccion.aula || 'Sin asignar'}
                                     </span>
                                 </div>
+
+                                {/* 🕒 NUEVA SECCIÓN: HORARIOS REALES */}
                                 <div className="info-row">
-                                    <span className="info-label">Horario:</span>
+                                    <span className="info-label">🕒 Horarios:</span>
+                                    <span className="info-value" style={{ display: 'block', marginTop: '4px' }}>
+                                        {formatearHorarios(seccion.horarios)}
+                                    </span>
+                                </div>
+
+                                <div className="info-row">
+                                    <span className="info-label">Capacidad:</span>
                                     <span className="info-value">
-                                        {seccion.turno}: 07:00 pm - 10:45 pm {seccion.aula || 'B-303'}
+                                        {seccion.estudiantesMatriculados}/{seccion.capacidad} estudiantes
                                     </span>
                                 </div>
                             </div>
@@ -240,7 +260,7 @@ export default function MisSeccionesProfesor() {
                                         <span className="fecha-value">{formatFecha(seccion.fechaFin)}</span>
                                     </div>
                                 </div>
-                                
+                               
                                 <div className="card-actions">
                                     <span className={`status-badge ${seccion.activa ? 'active' : 'inactive'}`}>
                                         {seccion.activa ? 'Activo' : 'Inactivo'}

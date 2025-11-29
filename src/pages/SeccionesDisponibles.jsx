@@ -1,7 +1,6 @@
-// src/pages/SeccionesDisponibles.jsx
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
-import '../styles/MisSeccionesProfesor.css'; // Asegúrate de que este CSS tenga los estilos de las cards bonitas
+import '../styles/MisSeccionesProfesor.css';
 
 // Función auxiliar para sacar el número del grado
 const extraerNumero = (str) => {
@@ -12,15 +11,15 @@ const extraerNumero = (str) => {
 
 export default function SeccionesDisponibles() {
     const [secciones, setSecciones] = useState([]);
-    const [misMatriculas, setMisMatriculas] = useState([]); // 🆕 Para saber en qué cursos ya está
-    
+    const [misMatriculas, setMisMatriculas] = useState([]);
+   
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    
+   
     // Filtros
     const [searchTerm, setSearchTerm] = useState('');
-    const [filtroCurso, setFiltroCurso] = useState('TODOS'); // 🆕 Filtro por Curso
-    
+    const [filtroCurso, setFiltroCurso] = useState('TODOS');
+   
     const [usuario, setUsuario] = useState(null);
 
     const URL_BASE = "https://plataforma-edu-back-gpcsh9h7fddkfvfb.chilecentral-01.azurewebsites.net";
@@ -32,7 +31,7 @@ export default function SeccionesDisponibles() {
         try {
             // A. Cargar Perfil
             const resPerfil = await axios.get(`${URL_BASE}/api/auth/me`, { withCredentials: true });
-            
+           
             if (resPerfil.data?.rol === "ALUMNO" && resPerfil.data.grado) {
                 setUsuario(resPerfil.data);
             } else {
@@ -45,7 +44,7 @@ export default function SeccionesDisponibles() {
             const resSecciones = await axios.get(`${URL_BASE}/api/secciones/con-cupo`, { withCredentials: true });
             setSecciones(resSecciones.data);
 
-            // C. 🆕 Cargar Matrículas Actuales del Alumno (Para validar duplicados)
+            // C. Cargar Matrículas Actuales del Alumno
             const resMatriculas = await axios.get(`${URL_BASE}/api/matriculas/mis-matriculas/activas`, { withCredentials: true });
             setMisMatriculas(resMatriculas.data);
 
@@ -73,7 +72,7 @@ export default function SeccionesDisponibles() {
             );
 
             alert("¡Matrícula exitosa!");
-            cargarDatos(); // Recargamos todo para actualizar cupos y bloqueos
+            cargarDatos(); // Recargamos todo
         } catch (err) {
             const errorMsg = err.response?.data?.message || "Error en la matrícula";
             alert(errorMsg);
@@ -81,16 +80,13 @@ export default function SeccionesDisponibles() {
     };
 
     // --- LÓGICA DE FILTRADO ---
-    
-    // 1. Obtener lista única de nombres de cursos para el Combobox
-    // Solo mostramos cursos que coincidan con el nivel del alumno para no ensuciar la lista
+   
     const cursosDisponiblesParaFiltro = [...new Set(
         secciones
             .filter(s => usuario && s.nivelSeccion === usuario.nivel)
             .map(s => s.tituloCurso)
     )].sort();
 
-    // 2. Filtrar Secciones
     const seccionesFiltradas = secciones.filter((s) => {
         if (!usuario) return false;
 
@@ -108,7 +104,7 @@ export default function SeccionesDisponibles() {
             s.codigo.toLowerCase().includes(searchTerm.toLowerCase()) ||
             s.tituloCurso.toLowerCase().includes(searchTerm.toLowerCase());
 
-        // C. 🆕 Filtro por Curso (Combobox)
+        // C. Filtro por Curso (Combobox)
         const coincideCurso = filtroCurso === 'TODOS' || s.tituloCurso === filtroCurso;
 
         return coincideBusqueda && coincideCurso;
@@ -117,11 +113,28 @@ export default function SeccionesDisponibles() {
     // Colores para el diseño
     const getTurnoColor = (turno) => {
         switch (turno) {
-            case "MAÑANA": return "#ff9800"; // Naranja
-            case "TARDE": return "#2196f3";  // Azul
-            case "NOCHE": return "#9c27b0";  // Morado
+            case "MAÑANA": return "#ff9800";
+            case "TARDE": return "#2196f3";
+            case "NOCHE": return "#9c27b0";
             default: return "#757575";
         }
+    };
+
+    // 🕒 NUEVA FUNCIÓN: Formatear horarios
+    const formatearHorarios = (horarios) => {
+        if (!horarios || horarios.length === 0) {
+            return <span style={{ color: '#999' }}>Sin horarios</span>;
+        }
+
+        return (
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                {horarios.map((h, idx) => (
+                    <li key={idx} style={{ fontSize: '0.85em', marginBottom: '3px' }}>
+                        <strong>{h.diaSemana.substring(0, 3)}:</strong> {h.horaInicio.substring(0, 5)} - {h.horaFin.substring(0, 5)}
+                    </li>
+                ))}
+            </ul>
+        );
     };
 
     if (loading) {
@@ -159,10 +172,10 @@ export default function SeccionesDisponibles() {
             )}
 
             {/* --- BARRA DE FILTROS --- */}
-            <div style={{ 
-                display: 'grid', 
-                gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', 
-                gap: '15px', 
+            <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+                gap: '15px',
                 marginBottom: '20px',
                 backgroundColor: 'white',
                 padding: '15px',
@@ -182,7 +195,7 @@ export default function SeccionesDisponibles() {
                     />
                 </div>
 
-                {/* 🆕 Filtro de Cursos (Combobox) */}
+                {/* Filtro de Cursos (Combobox) */}
                 <div>
                     <label style={{ fontSize: '0.9em', color: '#666', marginBottom: '5px', display: 'block' }}>Filtrar por Curso:</label>
                     <select
@@ -209,9 +222,9 @@ export default function SeccionesDisponibles() {
             ) : (
                 <div className="secciones-grid">
                     {seccionesFiltradas.map((seccion) => {
-                        // 🆕 Lógica para verificar si YA TIENE EL CURSO
+                        // Lógica para verificar si YA TIENE EL CURSO
                         const yaTieneCurso = misMatriculas.some(
-                            m => m.cursoId === seccion.cursoId // Si el ID del curso coincide
+                            m => m.cursoId === seccion.cursoId
                         );
 
                         return (
@@ -221,7 +234,7 @@ export default function SeccionesDisponibles() {
                                     <div className="card-icon"><span>📚</span></div>
                                     <div className="card-title-section">
                                         <h3 className="card-title">{seccion.tituloCurso}</h3>
-                                        <p className="card-subtitle">{seccion.nombre}</p> {/* Ej: Matematica - 5to A */}
+                                        <p className="card-subtitle">{seccion.nombre}</p>
                                     </div>
                                     <span className="turno-badge" style={{ backgroundColor: getTurnoColor(seccion.turno) }}>
                                         {seccion.turno}
@@ -234,14 +247,25 @@ export default function SeccionesDisponibles() {
                                         <span className="info-label">Código:</span>
                                         <span className="info-value">{seccion.codigo}</span>
                                     </div>
+
                                     <div className="info-row">
                                         <span className="info-label">Profesor:</span>
                                         <span className="info-value">{seccion.nombreProfesor}</span>
                                     </div>
+
                                     <div className="info-row">
                                         <span className="info-label">Aula:</span>
                                         <span className="info-value">{seccion.aula || 'Virtual'}</span>
                                     </div>
+
+                                    {/* 🕒 NUEVA SECCIÓN: HORARIOS */}
+                                    <div className="info-row">
+                                        <span className="info-label">🕒 Horarios:</span>
+                                        <span className="info-value" style={{ display: 'block', marginTop: '4px' }}>
+                                            {formatearHorarios(seccion.horarios)}
+                                        </span>
+                                    </div>
+
                                     <div className="info-row">
                                         <span className="info-label">Cupos:</span>
                                         <span className="info-value" style={{ fontWeight: 'bold', color: seccion.tieneCupo ? '#4caf50' : '#f44336' }}>
@@ -261,16 +285,16 @@ export default function SeccionesDisponibles() {
 
                                     <div className="card-actions">
                                         {yaTieneCurso ? (
-                                            // 🚫 Botón Deshabilitado si ya tiene el curso
-                                            <button 
-                                                className="btn-ingresar" 
-                                                disabled 
+                                            // Botón Deshabilitado si ya tiene el curso
+                                            <button
+                                                className="btn-ingresar"
+                                                disabled
                                                 style={{ backgroundColor: '#9e9e9e', cursor: 'default' }}
                                             >
                                                 ✅ Ya inscrito
                                             </button>
                                         ) : (
-                                            // ✅ Botón de Matricula Normal
+                                            // Botón de Matricula Normal
                                             <button
                                                 onClick={() => handleMatricularse(seccion.id)}
                                                 className="btn-ingresar"
@@ -286,7 +310,7 @@ export default function SeccionesDisponibles() {
                                         )}
                                     </div>
                                 </div>
-                                
+                               
                                 {/* Badge flotante de estudiantes */}
                                 <div className="estudiantes-badge">
                                     <span className="estudiantes-icon">👥</span>

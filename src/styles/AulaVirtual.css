@@ -1,0 +1,237 @@
+/* Contenedor Principal */
+.aula-container {
+    padding: 20px;
+    background-color: #fcfcfc;
+    min-height: 100vh;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+}
+
+/* --- TABS SUPERIORES (01, 02, 03...) --- */
+.sesiones-tabs {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+    scrollbar-width: thin;
+}
+
+.tab-btn {
+    min-width: 45px;
+    height: 35px;
+    border: 1px solid #ddd;
+    background-color: #e0e0e0;
+    color: #555;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.tab-btn:hover {
+    background-color: #d6d6d6;
+}
+
+.tab-btn.active {
+    background-color: white;
+    border-bottom: 3px solid #ff9800; /* Naranja selección */
+    color: #ff9800;
+    position: relative;
+    top: 1px; /* Efecto de solapa */
+    box-shadow: 0 -2px 5px rgba(0,0,0,0.05);
+}
+
+/* --- CABECERA DE SESIÓN --- */
+.sesion-header-card {
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+}
+
+.sesion-titulo-badge {
+    background-color: #ff9800;
+    color: white;
+    padding: 5px 15px;
+    border-radius: 6px;
+    font-weight: bold;
+    font-size: 1.1rem;
+    display: inline-block;
+    margin-bottom: 15px;
+}
+
+/* Acordeones (Temática / Resultado) */
+.acordeon-item {
+    border: 1px solid #eee;
+    border-radius: 6px;
+    margin-bottom: 10px;
+    overflow: hidden;
+}
+
+.acordeon-header {
+    background-color: #fff;
+    padding: 12px 15px;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: 600;
+    color: #555;
+}
+
+.acordeon-header:hover {
+    background-color: #f9f9f9;
+}
+
+.acordeon-content {
+    padding: 15px;
+    background-color: #fafafa;
+    border-top: 1px solid #eee;
+    color: #666;
+    font-size: 0.95rem;
+}
+
+/* Botón Ruta de Aprendizaje */
+.btn-ruta {
+    background-color: #a0522d; /* Marrón tipo sienna */
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 20px;
+    font-weight: bold;
+    float: right;
+    cursor: pointer;
+    margin-top: -50px; /* Ajuste visual */
+}
+
+/* --- GRID DE 3 COLUMNAS --- */
+.fases-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.fase-columna {
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+}
+
+.fase-titulo {
+    font-weight: bold;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 1rem;
+    color: #444;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* --- TARJETAS DE RECURSOS --- */
+.recurso-card {
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 12px;
+    position: relative;
+    border-left: 4px solid transparent;
+    transition: transform 0.2s;
+}
+
+.recurso-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+}
+
+.recurso-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.recurso-icon {
+    font-size: 1.2rem;
+}
+
+.recurso-info {
+    flex: 1;
+}
+
+.recurso-tipo {
+    font-size: 0.75rem;
+    font-weight: bold;
+    color: #888;
+    text-transform: uppercase;
+    margin-bottom: 2px;
+    display: block;
+}
+
+.recurso-titulo {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #333;
+    line-height: 1.3;
+}
+
+.recurso-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 10px;
+    border-top: 1px solid rgba(0,0,0,0.05);
+    padding-top: 8px;
+}
+
+.recurso-fecha {
+    font-size: 0.75rem;
+    color: #999;
+}
+
+.btn-ver {
+    background-color: #8d8d8d;
+    color: white;
+    border: none;
+    border-radius: 12px;
+    padding: 4px 12px;
+    font-size: 0.75rem;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.btn-ver:hover {
+    opacity: 0.8;
+}
+
+/* --- COLORES TEMÁTICOS --- */
+
+/* EXPLORA (Antes) - Morado/Azul */
+.fase-explora .recurso-card {
+    background-color: #f3f0fa; /* Fondo Lila suave */
+    border-left-color: #d1c4e9;
+}
+.fase-explora .recurso-icon { color: #ff9800; } /* Icono naranja en la imagen */
+
+/* EXPERIMENTA (Durante) - Verde */
+.fase-experimenta .recurso-card {
+    background-color: #e8f5e9; /* Fondo Verde suave */
+    border-left-color: #4caf50;
+}
+.fase-experimenta .recurso-icon { color: #2e7d32; }
+
+/* APLICA (Después) - Rojo/Rosado */
+.fase-aplica .recurso-card {
+    background-color: #ffebee; /* Fondo Rojo suave */
+    border-left-color: #ef5350;
+}
+.fase-aplica .recurso-icon { color: #c62828; }

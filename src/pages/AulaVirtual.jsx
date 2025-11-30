@@ -12,24 +12,21 @@ export default function AulaVirtual() {
     const [sesionActiva, setSesionActiva] = useState(null);
     const [loading, setLoading] = useState(true);
     
-    // Estados para los acordeones
     const [showTematica, setShowTematica] = useState(true);
     const [showResultado, setShowResultado] = useState(true);
 
     useEffect(() => {
         const fetchSesiones = async () => {
             try {
-                // 👇 CAMBIO IMPORTANTE: Ahora llamamos al endpoint específico de sesiones
                 const response = await axios.get(`${BASE_URL}/api/secciones/${seccionId}/sesiones`, { withCredentials: true });
-                
-                // La respuesta YA es la lista de sesiones (gracias al nuevo endpoint)
                 const sesionesData = response.data || [];
                 
+                // Ordenar por fecha
+                sesionesData.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
                 setSesiones(sesionesData);
                 
-                // Por defecto seleccionamos la sesión más cercana a hoy o la primera
+                // Seleccionar sesión por defecto (hoy o futura más cercana, o la primera)
                 if (sesionesData.length > 0) {
-                    // Lógica opcional: Buscar la sesión de hoy o futura más cercana
                     const hoy = new Date().toISOString().split('T')[0];
                     const sesionActual = sesionesData.find(s => s.fecha >= hoy) || sesionesData[0];
                     setSesionActiva(sesionActual);
@@ -44,9 +41,6 @@ export default function AulaVirtual() {
         fetchSesiones();
     }, [seccionId]);
 
-    // ... (El resto del componente RecursoCard y el return queda IGUAL que antes) ...
-    // Solo asegúrate de copiar el resto del código que te pasé en la respuesta anterior
-    
     const RecursoCard = ({ recurso }) => {
         let icono = '📄';
         if (recurso.tipoArchivo === 'LINK') icono = '🔗';
@@ -58,10 +52,10 @@ export default function AulaVirtual() {
                 <div className="recurso-header">
                     <span className="recurso-icon">{icono}</span>
                     <div className="recurso-info">
-                        <span className="recurso-tipo">{recurso.tipoArchivo || 'Archivo'}</span>
+                        <span className="recurso-tipo">{recurso.tipoArchivo || 'Recurso'}</span>
                         <div className="recurso-titulo">{recurso.titulo}</div>
                     </div>
-                    <span style={{color: '#999'}}>◯</span> 
+                    <span style={{color: '#999', fontSize: '1.2em'}}>◯</span> 
                 </div>
                 <div className="recurso-footer">
                     <span className="recurso-fecha">Publicado: {new Date().toLocaleDateString()}</span>
@@ -76,18 +70,15 @@ export default function AulaVirtual() {
     if (!sesionActiva) return (
         <div style={{padding: 40, textAlign: 'center', color: '#666'}}>
             <h2>📭 No hay sesiones programadas</h2>
-            <p>Parece que esta sección aún no tiene el calendario generado.</p>
-            {/* Tip para debugging */}
-            <p style={{fontSize: '0.8em', marginTop: 20}}>Si eres administrador, edita la sección y guárdala de nuevo para regenerar las sesiones.</p>
+            <p>Si eres administrador, edita la sección para generar el calendario.</p>
         </div>
     );
 
-    // Filtrar recursos por momento
-    const recursosExplora = sesionActiva.recursos?.filter(r => r.momento === 'ANTES') || [];
-    const recursosExperimenta = sesionActiva.recursos?.filter(r => r.momento === 'DURANTE') || [];
-    const recursosAplica = sesionActiva.recursos?.filter(r => r.momento === 'DESPUES') || [];
+    // Filtrar recursos usando los Enums del Backend
+    const recursosAntes = sesionActiva.recursos?.filter(r => r.momento === 'ANTES') || [];
+    const recursosDurante = sesionActiva.recursos?.filter(r => r.momento === 'DURANTE') || [];
+    const recursosDespues = sesionActiva.recursos?.filter(r => r.momento === 'DESPUES') || [];
 
-    // Calcular índice visual (Sesión 01, 02...)
     const indexActiva = sesiones.findIndex(s => s.id === sesionActiva.id) + 1;
 
     return (
@@ -100,7 +91,7 @@ export default function AulaVirtual() {
                         key={sesion.id}
                         className={`tab-btn ${sesion.id === sesionActiva.id ? 'active' : ''}`}
                         onClick={() => setSesionActiva(sesion)}
-                        title={sesion.fecha} // Tooltip con la fecha real
+                        title={sesion.fecha}
                     >
                         {String(index + 1).padStart(2, '0')}
                     </button>
@@ -109,32 +100,38 @@ export default function AulaVirtual() {
 
             {/* AREA DE CONTENIDO */}
             <div className="sesion-header-card">
-                <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start'}}>
+                <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '10px'}}>
                     <div>
                         <div className="sesion-titulo-badge">
                             Sesión {indexActiva}
                         </div>
-                        <span style={{marginLeft: 15, color: '#666', fontWeight: 500}}>
-                            📅 {new Date(sesionActiva.fecha).toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                        <span style={{marginLeft: 15, color: '#555', fontWeight: 600}}>
+                            📅 {new Date(sesionActiva.fecha).toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}
                         </span>
                     </div>
-                    <button className="btn-ruta">Ruta de aprendizaje</button>
+                    
+                    {/* 🛠️ BOTÓN CAMBIADO: GESTIONAR ASISTENCIAS (Sin funcionalidad aún) */}
+                    <button 
+                        className="btn-asistencia" 
+                        onClick={() => alert("🛠️ Funcionalidad de Asistencias: Pendiente de implementar")}
+                    >
+                        📋 Gestionar Asistencias
+                    </button>
                 </div>
 
-                {/* Acordeón Temática */}
+                {/* Acordeones */}
                 <div className="acordeon-item">
                     <div className="acordeon-header" onClick={() => setShowTematica(!showTematica)}>
-                        <span>📄 Temática/Contenido</span>
+                        <span>📄 Temática / Contenido</span>
                         <span>{showTematica ? '▲' : '▼'}</span>
                     </div>
                     {showTematica && (
                         <div className="acordeon-content">
-                            {sesionActiva.tema || "El profesor aún no ha definido la temática de esta sesión."}
+                            {sesionActiva.tema || "El profesor aún no ha definido el tema."}
                         </div>
                     )}
                 </div>
 
-                {/* Acordeón Resultado */}
                 <div className="acordeon-item">
                     <div className="acordeon-header" onClick={() => setShowResultado(!showResultado)}>
                         <span>🎯 Resultado de aprendizaje</span>
@@ -142,31 +139,45 @@ export default function AulaVirtual() {
                     </div>
                     {showResultado && (
                         <div className="acordeon-content">
-                            {sesionActiva.descripcion || "No hay descripción disponible."}
+                            {sesionActiva.descripcion || "Sin descripción."}
                         </div>
                     )}
                 </div>
             </div>
 
-            {/* COLUMNAS DE RECURSOS */}
+            {/* 3. COLUMNAS: ANTES - DURANTE - DESPUÉS */}
             <div className="fases-grid">
-                <div className="fase-columna fase-explora">
-                    <div className="fase-titulo"><span>🔍</span> EXPLORA</div>
-                    {recursosExplora.length === 0 && <p style={{fontSize: '0.8em', color: '#999'}}>No hay recursos previos.</p>}
-                    {recursosExplora.map(r => <RecursoCard key={r.id} recurso={r} />)}
+                
+                {/* COLUMNA 1: ANTES */}
+                <div className="fase-columna fase-antes">
+                    <div className="fase-titulo">
+                        <span>⏮️</span> ANTES
+                    </div>
+                    <p className="fase-desc">Preparación previa</p>
+                    {recursosAntes.length === 0 && <div className="empty-recurso">Sin recursos previos</div>}
+                    {recursosAntes.map(r => <RecursoCard key={r.id} recurso={r} />)}
                 </div>
 
-                <div className="fase-columna fase-experimenta">
-                    <div className="fase-titulo"><span>🧪</span> EXPERIMENTA</div>
-                    {recursosExperimenta.length === 0 && <p style={{fontSize: '0.8em', color: '#999'}}>No hay recursos de clase.</p>}
-                    {recursosExperimenta.map(r => <RecursoCard key={r.id} recurso={r} />)}
+                {/* COLUMNA 2: DURANTE */}
+                <div className="fase-columna fase-durante">
+                    <div className="fase-titulo">
+                        <span>🔥</span> DURANTE
+                    </div>
+                    <p className="fase-desc">Material de clase</p>
+                    {recursosDurante.length === 0 && <div className="empty-recurso">Sin material de clase</div>}
+                    {recursosDurante.map(r => <RecursoCard key={r.id} recurso={r} />)}
                 </div>
 
-                <div className="fase-columna fase-aplica">
-                    <div className="fase-titulo"><span>🔨</span> APLICA</div>
-                    {recursosAplica.length === 0 && <p style={{fontSize: '0.8em', color: '#999'}}>No hay tareas posteriores.</p>}
-                    {recursosAplica.map(r => <RecursoCard key={r.id} recurso={r} />)}
+                {/* COLUMNA 3: DESPUÉS */}
+                <div className="fase-columna fase-despues">
+                    <div className="fase-titulo">
+                        <span>⏭️</span> DESPUÉS
+                    </div>
+                    <p className="fase-desc">Tareas y refuerzo</p>
+                    {recursosDespues.length === 0 && <div className="empty-recurso">Sin tareas asignadas</div>}
+                    {recursosDespues.map(r => <RecursoCard key={r.id} recurso={r} />)}
                 </div>
+
             </div>
         </div>
     );

@@ -9,13 +9,12 @@ const DAYS_LABELS = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sáb
 
 export default function HorarioSemanal({ secciones }) {
     
-    // Validación de seguridad: si secciones es nulo o indefinido
     if (!secciones || !Array.isArray(secciones)) {
         return <div style={{padding: 20, textAlign: 'center'}}>No hay datos de horario para mostrar.</div>;
     }
 
     const getPositionStyle = (horaInicio, horaFin) => {
-        if (!horaInicio || !horaFin) return { display: 'none' }; // Protección contra horas nulas
+        if (!horaInicio || !horaFin) return { display: 'none' }; 
 
         const [hInicio, mInicio] = horaInicio.split(':').map(Number);
         const [hFin, mFin] = horaFin.split(':').map(Number);
@@ -31,7 +30,7 @@ export default function HorarioSemanal({ secciones }) {
     };
 
     const getColor = (id) => {
-        const safeId = id || Math.floor(Math.random() * 100); // Protección si no hay ID
+        const safeId = id || Math.floor(Math.random() * 100); 
         const colors = ['#FFCDD2', '#C8E6C9', '#BBDEFB', '#FFF9C4', '#E1BEE7', '#FFE0B2'];
         return colors[safeId % colors.length];
     };
@@ -60,12 +59,8 @@ export default function HorarioSemanal({ secciones }) {
                             <div key={i} className="grid-cell"></div>
                         ))}
 
-                        {/* RENDERIZADO SEGURO */}
                         {secciones.map((seccion, sIdx) => {
-                            // Si la sección es nula, la saltamos
                             if (!seccion) return null;
-                            
-                            // Aseguramos que horarios sea un array
                             const horarios = seccion.horarios || [];
 
                             return horarios
@@ -81,7 +76,11 @@ export default function HorarioSemanal({ secciones }) {
                                         }}
                                         title={`${seccion.tituloCurso} - ${seccion.aula || 'Virtual'}`}
                                     >
-                                        <div className="event-title">{seccion.tituloCurso || seccion.nombre || 'Curso'}</div>
+                                        {/* 🛠️ MUESTRA EL TÍTULO CORRECTO */}
+                                        <div className="event-title">
+                                            {seccion.tituloCurso || seccion.nombre || 'Curso'}
+                                        </div>
+                                        
                                         <div className="event-info">
                                             {h.horaInicio?.substring(0, 5)} - {h.horaFin?.substring(0, 5)}
                                         </div>

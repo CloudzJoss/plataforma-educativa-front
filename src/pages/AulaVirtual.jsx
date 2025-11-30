@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
-import CrearRecursoModal from '../components/CrearRecursoModal'; // 👇 IMPORTAR EL NUEVO MODAL
+import CrearRecursoModal from '../components/CrearRecursoModal'; // 👈 IMPORTANTE: Importar el modal
 import '../styles/AulaVirtual.css';
 
 const BASE_URL = 'https://plataforma-edu-back-gpcsh9h7fddkfvfb.chilecentral-01.azurewebsites.net';
@@ -17,29 +17,41 @@ export default function AulaVirtual() {
     const [showTematica, setShowTematica] = useState(true);
     const [showResultado, setShowResultado] = useState(true);
 
-    // Estados para Crear Recurso
+    // Estados para el Modal de Recursos
     const [showModalRecurso, setShowModalRecurso] = useState(false);
     const [momentoSeleccionado, setMomentoSeleccionado] = useState(null);
 
     const userRole = localStorage.getItem('userRole');
     const tabsContainerRef = useRef(null);
 
-    // Función para recargar los datos (se pasa al modal para que actualice al crear)
+    // Función principal de carga (la sacamos del useEffect para poder reusarla al crear recurso)
     const fetchSesiones = async () => {
         try {
             const response = await axios.get(`${BASE_URL}/api/secciones/${seccionId}/sesiones`, { withCredentials: true });
             const sesionesData = response.data || [];
+            
+            // Ordenar cronológicamente
             sesionesData.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
             setSesiones(sesionesData);
             
-            // Si ya había una sesión activa seleccionada, la actualizamos para ver el nuevo recurso
+            // Lógica de Selección Inteligente
+            // Si ya hay una sesión activa seleccionada, tratamos de mantenerla (actualizada con los nuevos recursos)
             if (sesionActiva) {
-                const actualizada = sesionesData.find(s => s.id === sesionActiva.id);
-                if (actualizada) setSesionActiva(actualizada);
-            } else if (sesionesData.length > 0) {
+                const sesionActualizada = sesionesData.find(s => s.id === sesionActiva.id);
+                if (sesionActualizada) {
+                    setSesionActiva(sesionActualizada);
+                    return; // Salimos para no sobrescribir la selección del usuario
+                }
+            }
+
+            // Si es la primera carga o se perdió la referencia
+            if (sesionesData.length > 0) {
                 const hoy = new Date().toISOString().split('T')[0];
-                const sesionActual = sesionesData.find(s => s.fecha >= hoy) || sesionesData[0];
-                setSesionActiva(sesionActual);
+                let sesionObjetivo = sesionesData.find(s => s.fecha >= hoy);
+                if (!sesionObjetivo) {
+                    sesionObjetivo = sesionesData[sesionesData.length - 1];
+                }
+                setSesionActiva(sesionObjetivo);
             }
         } catch (error) {
             console.error("Error cargando el aula:", error);
@@ -48,10 +60,12 @@ export default function AulaVirtual() {
         }
     };
 
+    // 1. Carga inicial
     useEffect(() => {
         fetchSesiones();
     }, [seccionId]);
 
+    // 2. Auto-scroll
     useEffect(() => {
         if (sesionActiva && tabsContainerRef.current) {
             const btnId = `tab-btn-${sesionActiva.id}`;
@@ -60,7 +74,7 @@ export default function AulaVirtual() {
                 activeBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
             }
         }
-    }, [sesionActiva?.id]);
+    }, [sesionActiva?.id]); // Usamos encadenamiento opcional para evitar errores si es null
 
     // Handler para abrir el modal
     const handleAbrirModal = (momento) => {
@@ -94,16 +108,23 @@ export default function AulaVirtual() {
 
     if (loading) return <div style={{padding: 40, textAlign: 'center'}}>Cargando aula virtual...</div>;
 
-    if (!sesionActiva) return <div style={{padding: 40, textAlign: 'center', color: '#666'}}><h2>📭 No hay sesiones programadas</h2></div>;
+    if (!sesionActiva) return (
+        <div style={{padding: 40, textAlign: 'center', color: '#666'}}>
+            <h2>📭 No hay sesiones programadas</h2>
+            <p>El calendario de clases aún no ha sido generado.</p>
+        </div>
+    );
 
     const recursosAntes = sesionActiva.recursos?.filter(r => r.momento === 'ANTES') || [];
     const recursosDurante = sesionActiva.recursos?.filter(r => r.momento === 'DURANTE') || [];
     const recursosDespues = sesionActiva.recursos?.filter(r => r.momento === 'DESPUES') || [];
+
     const indexActiva = sesiones.findIndex(s => s.id === sesionActiva.id) + 1;
 
     return (
         <div className="aula-container">
             <div style={{fontWeight: 'bold', marginBottom: '10px', color: '#666'}}>Sesiones de clase:</div>
+            
             <div className="sesiones-tabs" ref={tabsContainerRef}>
                 {sesiones.map((sesion, index) => (
                     <button 
@@ -121,30 +142,57 @@ export default function AulaVirtual() {
             <div className="sesion-header-card">
                 <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '10px'}}>
                     <div>
-                        <div className="sesion-titulo-badge">Sesión {indexActiva}</div>
+                        <div className="sesion-titulo-badge">
+                            Sesión {indexActiva}
+                        </div>
                         <span style={{marginLeft: 15, color: '#555', fontWeight: 600}}>
                             📅 {new Date(sesionActiva.fecha).toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}
                         </span>
+                        
                         {new Date(sesionActiva.fecha).toISOString().split('T')[0] === new Date().toISOString().split('T')[0] && (
-                            <span style={{marginLeft: 10, color: '#2e7d32', fontWeight: 'bold', backgroundColor: '#e8f5e9', padding: '2px 8px', borderRadius: '4px', fontSize: '0.8em'}}>📍 HOY</span>
+                            <span style={{marginLeft: 10, color: '#2e7d32', fontWeight: 'bold', backgroundColor: '#e8f5e9', padding: '2px 8px', borderRadius: '4px', fontSize: '0.8em'}}>
+                                📍 HOY
+                            </span>
                         )}
                     </div>
+                    
                     {userRole === 'PROFESOR' && (
-                        <button className="btn-asistencia" onClick={() => alert("🛠️ Funcionalidad de Asistencias: Pendiente")}>📋 Gestionar Asistencias</button>
+                        <button 
+                            className="btn-asistencia" 
+                            onClick={() => alert("🛠️ Funcionalidad de Asistencias: Pendiente de implementar")}
+                        >
+                            📋 Gestionar Asistencias
+                        </button>
                     )}
                 </div>
 
                 <div className="acordeon-item">
-                    <div className="acordeon-header" onClick={() => setShowTematica(!showTematica)}><span>📄 Temática / Contenido</span><span>{showTematica ? '▲' : '▼'}</span></div>
-                    {showTematica && <div className="acordeon-content">{sesionActiva.tema || "El profesor aún no ha definido el tema."}</div>}
+                    <div className="acordeon-header" onClick={() => setShowTematica(!showTematica)}>
+                        <span>📄 Temática / Contenido</span>
+                        <span>{showTematica ? '▲' : '▼'}</span>
+                    </div>
+                    {showTematica && (
+                        <div className="acordeon-content">
+                            {sesionActiva.tema || "El profesor aún no ha definido el tema."}
+                        </div>
+                    )}
                 </div>
+
                 <div className="acordeon-item">
-                    <div className="acordeon-header" onClick={() => setShowResultado(!showResultado)}><span>🎯 Resultado de aprendizaje</span><span>{showResultado ? '▲' : '▼'}</span></div>
-                    {showResultado && <div className="acordeon-content">{sesionActiva.descripcion || "Sin descripción."}</div>}
+                    <div className="acordeon-header" onClick={() => setShowResultado(!showResultado)}>
+                        <span>🎯 Resultado de aprendizaje</span>
+                        <span>{showResultado ? '▲' : '▼'}</span>
+                    </div>
+                    {showResultado && (
+                        <div className="acordeon-content">
+                            {sesionActiva.descripcion || "Sin descripción."}
+                        </div>
+                    )}
                 </div>
             </div>
 
             <div className="fases-grid">
+                
                 {/* COLUMNA 1: ANTES */}
                 <div className="fase-columna fase-antes">
                     <div className="fase-titulo"><span>⏮️</span> ANTES</div>
@@ -152,7 +200,7 @@ export default function AulaVirtual() {
                     {recursosAntes.length === 0 && <div className="empty-recurso">Sin recursos previos</div>}
                     {recursosAntes.map(r => <RecursoCard key={r.id} recurso={r} />)}
                     
-                    {/* ➕ BOTÓN AGREGAR (SOLO PROFESOR) */}
+                    {/* ➕ BOTÓN SOLO PROFESOR */}
                     {userRole === 'PROFESOR' && (
                         <button className="btn-add-recurso" onClick={() => handleAbrirModal('ANTES')}>+</button>
                     )}
@@ -165,7 +213,7 @@ export default function AulaVirtual() {
                     {recursosDurante.length === 0 && <div className="empty-recurso">Sin material de clase</div>}
                     {recursosDurante.map(r => <RecursoCard key={r.id} recurso={r} />)}
 
-                    {/* ➕ BOTÓN AGREGAR (SOLO PROFESOR) */}
+                    {/* ➕ BOTÓN SOLO PROFESOR */}
                     {userRole === 'PROFESOR' && (
                         <button className="btn-add-recurso" onClick={() => handleAbrirModal('DURANTE')}>+</button>
                     )}
@@ -178,24 +226,27 @@ export default function AulaVirtual() {
                     {recursosDespues.length === 0 && <div className="empty-recurso">Sin tareas asignadas</div>}
                     {recursosDespues.map(r => <RecursoCard key={r.id} recurso={r} />)}
 
-                    {/* ➕ BOTÓN AGREGAR (SOLO PROFESOR) */}
+                    {/* ➕ BOTÓN SOLO PROFESOR */}
                     {userRole === 'PROFESOR' && (
                         <button className="btn-add-recurso" onClick={() => handleAbrirModal('DESPUES')}>+</button>
                     )}
                 </div>
+
             </div>
 
-            {/* MODAL PARA CREAR RECURSO */}
-            <CrearRecursoModal 
-                isOpen={showModalRecurso}
-                onClose={() => setShowModalRecurso(false)}
-                sesionId={sesionActiva.id}
-                momentoInicial={momentoSeleccionado} // Pasamos la columna donde hizo click
-                onRecursoCreado={() => {
-                    fetchSesiones(); // Recargamos para ver el nuevo recurso
-                    setShowModalRecurso(false);
-                }}
-            />
+            {/* MODAL GLOBAL */}
+            {sesionActiva && (
+                <CrearRecursoModal 
+                    isOpen={showModalRecurso}
+                    onClose={() => setShowModalRecurso(false)}
+                    sesionId={sesionActiva.id}
+                    momentoInicial={momentoSeleccionado}
+                    onRecursoCreado={() => {
+                        // Recargamos los datos para ver el nuevo recurso
+                        fetchSesiones(); 
+                    }}
+                />
+            )}
         </div>
     );
 }

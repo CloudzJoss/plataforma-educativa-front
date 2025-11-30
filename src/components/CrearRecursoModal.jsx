@@ -6,26 +6,22 @@ const BASE_URL = 'https://plataforma-edu-back-gpcsh9h7fddkfvfb.chilecentral-01.a
 export default function CrearRecursoModal({ isOpen, onClose, sesionId, momentoInicial, onRecursoCreado }) {
     const [titulo, setTitulo] = useState('');
     const [url, setUrl] = useState('');
-    const [tipoArchivo, setTipoArchivo] = useState('LINK'); // LINK, PDF, VIDEO
-    const [momento, setMomento] = useState(momentoInicial || 'ANTES');
+    const [tipoArchivo, setTipoArchivo] = useState('LINK'); // LINK, PDF, VIDEO, TAREA
+    const [momento, setMomento] = useState('ANTES');
     
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
-    // Actualizar el momento si cambia desde afuera (click en otra columna)
+    // Cuando se abre el modal, seteamos el momento según la columna donde se hizo clic
     useEffect(() => {
-        if (momentoInicial) setMomento(momentoInicial);
-    }, [momentoInicial]);
-
-    // Limpiar form al abrir
-    useEffect(() => {
-        if (isOpen) {
+        if (isOpen && momentoInicial) {
+            setMomento(momentoInicial);
             setTitulo('');
             setUrl('');
             setTipoArchivo('LINK');
             setError(null);
         }
-    }, [isOpen]);
+    }, [isOpen, momentoInicial]);
 
     if (!isOpen) return null;
 
@@ -43,13 +39,15 @@ export default function CrearRecursoModal({ isOpen, onClose, sesionId, momentoIn
                 sesionId: sesionId
             };
 
-            // Asegúrate de tener este endpoint en el backend
+            // Asegúrate de tener este endpoint en tu Backend (RecursoController)
             await axios.post(`${BASE_URL}/api/recursos`, payload, { withCredentials: true });
             
-            onRecursoCreado(); // Notifica al padre para refrescar
+            // Avisamos al padre (AulaVirtual) que recargue los datos
+            onRecursoCreado(); 
+            onClose();
         } catch (err) {
             console.error("Error creando recurso:", err);
-            setError("No se pudo crear el recurso. Verifica los datos.");
+            setError("No se pudo guardar el recurso. Intenta nuevamente.");
         } finally {
             setLoading(false);
         }
@@ -57,7 +55,7 @@ export default function CrearRecursoModal({ isOpen, onClose, sesionId, momentoIn
 
     return (
         <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
-            <div className="modal fixed-modal" style={{maxWidth: '500px'}}>
+            <div className="modal fixed-modal" style={{ maxWidth: '500px' }}>
                 <button className="modal-close" onClick={onClose}>×</button>
                 <div className="modal-body">
                     <h2 className="modal-title">Agregar Recurso ({momento})</h2>
@@ -68,7 +66,7 @@ export default function CrearRecursoModal({ isOpen, onClose, sesionId, momentoIn
                                 type="text" 
                                 value={titulo} 
                                 onChange={e => setTitulo(e.target.value)} 
-                                placeholder="Ej: Lectura sobre Álgebra" 
+                                placeholder="Ej: Diapositivas de la clase" 
                                 required 
                             />
                         </label>
@@ -83,7 +81,7 @@ export default function CrearRecursoModal({ isOpen, onClose, sesionId, momentoIn
                             />
                         </label>
 
-                        <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px'}}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
                             <label>Tipo
                                 <select value={tipoArchivo} onChange={e => setTipoArchivo(e.target.value)}>
                                     <option value="LINK">🔗 Enlace Web</option>
@@ -102,9 +100,9 @@ export default function CrearRecursoModal({ isOpen, onClose, sesionId, momentoIn
                             </label>
                         </div>
 
-                        {error && <div className="auth-error" style={{color: 'red', marginTop: 10}}>{error}</div>}
+                        {error && <div className="auth-error" style={{ color: 'red', marginTop: 10 }}>{error}</div>}
 
-                        <div className="modal-actions" style={{marginTop: 20}}>
+                        <div className="modal-actions" style={{ marginTop: 20 }}>
                             <button type="submit" className="btn-submit" disabled={loading}>
                                 {loading ? 'Guardando...' : 'Guardar Recurso'}
                             </button>

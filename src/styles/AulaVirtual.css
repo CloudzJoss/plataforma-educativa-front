@@ -212,3 +212,33 @@
     border: 1px dashed #ddd;
     border-radius: 6px;
 }
+
+/* BOTÓN DE AGREGAR RECURSO (+) */
+.btn-add-recurso {
+    background-color: transparent;
+    border: 2px dashed #ccc;
+    color: #aaa;
+    font-size: 1.5rem;
+    font-weight: bold;
+    width: 100%;
+    padding: 10px;
+    margin-top: 15px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-add-recurso:hover {
+    background-color: #fff;
+    border-color: #ff9800;
+    color: #ff9800;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    transform: scale(1.02);
+}
+
+.btn-add-recurso:active {
+    transform: scale(0.98);
+}

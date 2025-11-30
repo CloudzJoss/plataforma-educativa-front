@@ -12,8 +12,12 @@ export default function AulaVirtual() {
     const [sesionActiva, setSesionActiva] = useState(null);
     const [loading, setLoading] = useState(true);
     
+    // Estados para los acordeones
     const [showTematica, setShowTematica] = useState(true);
     const [showResultado, setShowResultado] = useState(true);
+
+    // 🔒 OBTENER EL ROL DEL USUARIO
+    const userRole = localStorage.getItem('userRole');
 
     useEffect(() => {
         const fetchSesiones = async () => {
@@ -70,7 +74,7 @@ export default function AulaVirtual() {
     if (!sesionActiva) return (
         <div style={{padding: 40, textAlign: 'center', color: '#666'}}>
             <h2>📭 No hay sesiones programadas</h2>
-            <p>Si eres administrador, edita la sección para generar el calendario.</p>
+            <p>El calendario de clases aún no ha sido generado.</p>
         </div>
     );
 
@@ -110,13 +114,15 @@ export default function AulaVirtual() {
                         </span>
                     </div>
                     
-                    {/* 🛠️ BOTÓN CAMBIADO: GESTIONAR ASISTENCIAS (Sin funcionalidad aún) */}
-                    <button 
-                        className="btn-asistencia" 
-                        onClick={() => alert("🛠️ Funcionalidad de Asistencias: Pendiente de implementar")}
-                    >
-                        📋 Gestionar Asistencias
-                    </button>
+                    {/* 🔒 SOLO VISIBLE PARA EL PROFESOR */}
+                    {userRole === 'PROFESOR' && (
+                        <button 
+                            className="btn-asistencia" 
+                            onClick={() => alert("🛠️ Funcionalidad de Asistencias: Pendiente de implementar")}
+                        >
+                            📋 Gestionar Asistencias
+                        </button>
+                    )}
                 </div>
 
                 {/* Acordeones */}

@@ -1,5 +1,5 @@
 // src/pages/AulaVirtual.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react'; // 👈 Agregamos useRef
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
 import '../styles/AulaVirtual.css';
@@ -19,21 +19,34 @@ export default function AulaVirtual() {
     // 🔒 OBTENER EL ROL DEL USUARIO
     const userRole = localStorage.getItem('userRole');
 
+    // Referencia para la barra de pestañas (scroll container)
+    const tabsContainerRef = useRef(null);
+
+    // 1. CARGA DE DATOS Y SELECCIÓN INTELIGENTE
     useEffect(() => {
         const fetchSesiones = async () => {
             try {
                 const response = await axios.get(`${BASE_URL}/api/secciones/${seccionId}/sesiones`, { withCredentials: true });
                 const sesionesData = response.data || [];
                 
-                // Ordenar por fecha
+                // Ordenar cronológicamente
                 sesionesData.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
                 setSesiones(sesionesData);
                 
-                // Seleccionar sesión por defecto (hoy o futura más cercana, o la primera)
+                // --- LÓGICA: ENCONTRAR LA SESIÓN MÁS CERCANA ---
                 if (sesionesData.length > 0) {
+                    // Obtenemos la fecha de hoy en formato YYYY-MM-DD para comparar strings (evita problemas de hora)
                     const hoy = new Date().toISOString().split('T')[0];
-                    const sesionActual = sesionesData.find(s => s.fecha >= hoy) || sesionesData[0];
-                    setSesionActiva(sesionActual);
+                    
+                    // Buscamos la primera sesión que sea HOY o DESPUÉS de hoy
+                    let sesionObjetivo = sesionesData.find(s => s.fecha >= hoy);
+
+                    // Si no hay sesiones futuras (el curso terminó), seleccionamos la última
+                    if (!sesionObjetivo) {
+                        sesionObjetivo = sesionesData[sesionesData.length - 1];
+                    }
+
+                    setSesionActiva(sesionObjetivo);
                 }
             } catch (error) {
                 console.error("Error cargando el aula:", error);
@@ -44,6 +57,24 @@ export default function AulaVirtual() {
 
         fetchSesiones();
     }, [seccionId]);
+
+    // 2. EFECTO: AUTO-SCROLL AL BOTÓN ACTIVO ("APUNTAR")
+    useEffect(() => {
+        if (sesionActiva && tabsContainerRef.current) {
+            // Buscamos el botón por su ID único en el DOM
+            const btnId = `tab-btn-${sesionActiva.id}`;
+            const activeBtn = document.getElementById(btnId);
+
+            if (activeBtn) {
+                // Hacemos que el navegador mueva el scroll hasta centrar ese botón
+                activeBtn.scrollIntoView({ 
+                    behavior: 'smooth', 
+                    block: 'nearest', 
+                    inline: 'center' 
+                });
+            }
+        }
+    }, [sesionActiva]); // Se ejecuta cada vez que cambia la sesión activa
 
     const RecursoCard = ({ recurso }) => {
         let icono = '📄';
@@ -78,7 +109,6 @@ export default function AulaVirtual() {
         </div>
     );
 
-    // Filtrar recursos usando los Enums del Backend
     const recursosAntes = sesionActiva.recursos?.filter(r => r.momento === 'ANTES') || [];
     const recursosDurante = sesionActiva.recursos?.filter(r => r.momento === 'DURANTE') || [];
     const recursosDespues = sesionActiva.recursos?.filter(r => r.momento === 'DESPUES') || [];
@@ -89,10 +119,13 @@ export default function AulaVirtual() {
         <div className="aula-container">
             {/* TABS SUPERIORES */}
             <div style={{fontWeight: 'bold', marginBottom: '10px', color: '#666'}}>Sesiones de clase:</div>
-            <div className="sesiones-tabs">
+            
+            {/* Agregamos la referencia 'ref' aquí */}
+            <div className="sesiones-tabs" ref={tabsContainerRef}>
                 {sesiones.map((sesion, index) => (
                     <button 
                         key={sesion.id}
+                        id={`tab-btn-${sesion.id}`} // 🆔 ID ÚNICO PARA EL SCROLL
                         className={`tab-btn ${sesion.id === sesionActiva.id ? 'active' : ''}`}
                         onClick={() => setSesionActiva(sesion)}
                         title={sesion.fecha}
@@ -112,9 +145,15 @@ export default function AulaVirtual() {
                         <span style={{marginLeft: 15, color: '#555', fontWeight: 600}}>
                             📅 {new Date(sesionActiva.fecha).toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}
                         </span>
+                        
+                        {/* Indicador visual si es la sesión de HOY */}
+                        {new Date(sesionActiva.fecha).toISOString().split('T')[0] === new Date().toISOString().split('T')[0] && (
+                            <span style={{marginLeft: 10, color: '#2e7d32', fontWeight: 'bold', backgroundColor: '#e8f5e9', padding: '2px 8px', borderRadius: '4px', fontSize: '0.8em'}}>
+                                📍 HOY
+                            </span>
+                        )}
                     </div>
                     
-                    {/* 🔒 SOLO VISIBLE PARA EL PROFESOR */}
                     {userRole === 'PROFESOR' && (
                         <button 
                             className="btn-asistencia" 

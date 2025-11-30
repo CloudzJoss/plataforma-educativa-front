@@ -1,3 +1,4 @@
+// src/pages/VerHorario.jsx
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import HorarioSemanal from '../components/HorarioSemanal';
@@ -18,36 +19,39 @@ export default function VerHorario() {
                 let dataNormalizada = [];
 
                 if (userRole === 'PROFESOR') {
-                    // El endpoint de profesor suele devolver las secciones directamente
+                    // Para el profesor, la data suele venir directa
                     const res = await axios.get(`${BASE_URL}/api/secciones/mis-secciones`, { withCredentials: true });
-                    console.log("Datos Profesor:", res.data);
                     dataNormalizada = res.data;
                 } 
                 else if (userRole === 'ALUMNO') {
+                    // Endpoint de matrículas activas
                     const res = await axios.get(`${BASE_URL}/api/matriculas/mis-matriculas/activas`, { withCredentials: true });
-                    console.log("Datos Alumno Crudos:", res.data); // Para depuración
-
-                    // Transformación robusta para Alumnos
+                    
+                    // 🛠️ CORRECCIÓN DE MAPEO: Usamos las propiedades directas de la matrícula
                     dataNormalizada = res.data.map(matricula => {
-                        // Intentamos obtener la sección desde matricula.seccion
                         const seccionBase = matricula.seccion || {};
                         
-                        // A veces los horarios vienen en 'matricula.horarios' en lugar de 'seccion.horarios'
-                        // dependiendo de cómo esté hecho el backend. Priorizamos lo que exista.
-                        const horariosReales = matricula.horarios || seccionBase.horarios || [];
+                        // Buscamos horarios en todas las posibles ubicaciones
+                        const horariosReales = matricula.horarios || matricula.horariosSeccion || seccionBase.horarios || [];
 
-                        // Devolvemos un objeto con la estructura que HorarioSemanal espera
                         return {
-                            id: seccionBase.id || matricula.id, // Fallback de ID
-                            tituloCurso: seccionBase.tituloCurso || seccionBase.nombre || 'Curso sin nombre',
-                            aula: seccionBase.aula,
-                            nombre: seccionBase.nombre,
+                            id: matricula.seccionId || seccionBase.id || matricula.id,
+                            
+                            // 🚨 AQUÍ ESTABA EL ERROR: 
+                            // Priorizamos 'matricula.tituloCurso' (como en MisMatriculas)
+                            tituloCurso: matricula.tituloCurso || seccionBase.tituloCurso || seccionBase.nombre || 'Curso sin nombre',
+                            
+                            // Priorizamos 'matricula.aulaSeccion'
+                            aula: matricula.aulaSeccion || seccionBase.aula || 'Virtual',
+                            
+                            // Nombre secundario (a veces el backend manda nombre de sección vs título de curso)
+                            nombre: matricula.nombreSeccion || seccionBase.nombre,
+                            
                             horarios: horariosReales
                         };
                     });
                 }
 
-                console.log("Datos para Calendario:", dataNormalizada);
                 setSecciones(dataNormalizada);
             } catch (err) {
                 console.error("Error cargando horario:", err);

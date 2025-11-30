@@ -20,6 +20,7 @@ export default function MisMatriculas() {
                 `${URL_BASE}/api/matriculas/mis-matriculas`,
                 { withCredentials: true }
             );
+            console.log("Datos Matrículas:", response.data); // Para depuración
             setMatriculas(response.data);
         } catch (err) {
             const msg = err.response?.data?.message || "Error al cargar matrículas";
@@ -35,7 +36,6 @@ export default function MisMatriculas() {
 
     // --- 🗑️ FUNCIÓN: ELIMINAR MATRÍCULA ---
     const handleEliminar = async (seccionId) => {
-        // Confirmación fuerte
         if (!window.confirm("¿Estás seguro de cancelar tu inscripción? Esta acción eliminará el registro del curso.")) {
             return;
         }
@@ -98,7 +98,7 @@ export default function MisMatriculas() {
         }
     };
 
-    // 🕒 NUEVA FUNCIÓN: Formatear horarios
+    // 🕒 Formatear horarios
     const formatearHorarios = (horarios) => {
         if (!horarios || horarios.length === 0) {
             return <span style={{ color: '#999', fontSize: '0.85em' }}>Sin horarios</span>;
@@ -174,158 +174,150 @@ export default function MisMatriculas() {
                 </div>
             ) : (
                 <div className="secciones-grid">
-                    {matriculasFiltradas.map((m) => (
-                        <div key={m.id} className="seccion-card">
-                            {/* Header de la tarjeta */}
-                            <div className="card-header">
-                                <div className="card-icon">📚</div>
-                                <div className="card-title-section">
-                                    <h3 className="card-title">{m.tituloCurso}</h3>
-                                    <p className="card-subtitle">{m.nivelCurso} - {m.gradoAlumno || m.gradoCurso}</p>
-                                </div>
-                                <span className="turno-badge" style={{ backgroundColor: getTurnoColor(m.turnoSeccion) }}>
-                                    {m.turnoSeccion}
-                                </span>
-                            </div>
+                    {matriculasFiltradas.map((m) => {
+                        
+                        // 🛠️ CORRECCIÓN CLAVE: Buscar los horarios en todas partes
+                        // A veces el backend los manda en 'horarios', otras en 'horariosSeccion', otras en 'seccion.horarios'
+                        const horariosReales = m.horarios || m.horariosSeccion || (m.seccion && m.seccion.horarios) || [];
 
-                            {/* Cuerpo de la tarjeta */}
-                            <div className="card-body">
-                                <div className="info-row">
-                                    <span className="info-label">Código:</span>
-                                    <span className="info-value">{m.codigoSeccion}</span>
-                                </div>
-
-                                <div className="info-row">
-                                    <span className="info-label">Profesor:</span>
-                                    <span className="info-value">{m.nombreProfesor}</span>
-                                </div>
-
-                                <div className="info-row">
-                                    <span className="info-label">Aula:</span>
-                                    <span className="info-value">{m.aulaSeccion || 'Virtual'}</span>
-                                </div>
-
-                                {/* 🕒 NUEVA SECCIÓN: HORARIOS */}
-                                <div className="info-row">
-                                    <span className="info-label">🕒 Horarios:</span>
-                                    <span className="info-value" style={{ display: 'block', marginTop: '4px' }}>
-                                        {formatearHorarios(m.horariosSeccion)}
+                        return (
+                            <div key={m.id} className="seccion-card">
+                                {/* Header de la tarjeta */}
+                                <div className="card-header">
+                                    <div className="card-icon">📚</div>
+                                    <div className="card-title-section">
+                                        <h3 className="card-title">{m.tituloCurso}</h3>
+                                        <p className="card-subtitle">{m.nivelCurso} - {m.gradoAlumno || m.gradoCurso}</p>
+                                    </div>
+                                    <span className="turno-badge" style={{ backgroundColor: getTurnoColor(m.turnoSeccion) }}>
+                                        {m.turnoSeccion}
                                     </span>
                                 </div>
 
-                                <div className="info-row">
-                                    <span className="info-label">Estado:</span>
-                                    <span className="info-value" style={{ fontWeight: 'bold', color: getEstadoColor(m.estado) }}>
-                                        {m.estado}
-                                    </span>
-                                </div>
+                                {/* Cuerpo de la tarjeta */}
+                                <div className="card-body">
+                                    <div className="info-row">
+                                        <span className="info-label">Código:</span>
+                                        <span className="info-value">{m.codigoSeccion}</span>
+                                    </div>
 
-                                {/* Calificación si existe */}
-                                {m.calificacionFinal !== null && (
-                                    <div className="info-row" style={{ marginTop: '10px', paddingTop: '10px', borderTop: '1px solid #eee' }}>
-                                        <span className="info-label">📊 Nota Final:</span>
-                                        <span className="info-value" style={{ 
-                                            fontWeight: 'bold', 
-                                            color: m.calificacionFinal >= 10.5 ? '#4caf50' : '#f44336',
-                                            fontSize: '1.1em'
-                                        }}>
-                                            {m.calificacionFinal}
+                                    <div className="info-row">
+                                        <span className="info-label">Profesor:</span>
+                                        <span className="info-value">{m.nombreProfesor}</span>
+                                    </div>
+
+                                    <div className="info-row">
+                                        <span className="info-label">Aula:</span>
+                                        <span className="info-value">{m.aulaSeccion || 'Virtual'}</span>
+                                    </div>
+
+                                    {/* 🕒 AQUÍ USAMOS LA VARIABLE CORREGIDA 'horariosReales' */}
+                                    <div className="info-row">
+                                        <span className="info-label">🕒 Horarios:</span>
+                                        <span className="info-value" style={{ display: 'block', marginTop: '4px' }}>
+                                            {formatearHorarios(horariosReales)}
                                         </span>
                                     </div>
-                                )}
-                            </div>
 
-                            {/* Pie de la tarjeta */}
-                            <div className="card-footer">
-                                <div className="fecha-info">
-                                    <div className="fecha-item">
-                                        <span className="fecha-label">Inicio:</span>
-                                        <span className="fecha-value">
-                                            {m.fechaInicioSeccion ? new Date(m.fechaInicioSeccion).toLocaleDateString("es-ES") : '---'}
+                                    <div className="info-row">
+                                        <span className="info-label">Estado:</span>
+                                        <span className="info-value" style={{ fontWeight: 'bold', color: getEstadoColor(m.estado) }}>
+                                            {m.estado}
                                         </span>
                                     </div>
-                                    {m.fechaFinSeccion && (
-                                        <div className="fecha-item">
-                                            <span className="fecha-label">Fin:</span>
-                                            <span className="fecha-value">
-                                                {new Date(m.fechaFinSeccion).toLocaleDateString("es-ES")}
+
+                                    {/* Calificación si existe */}
+                                    {m.calificacionFinal !== null && (
+                                        <div className="info-row" style={{ marginTop: '10px', paddingTop: '10px', borderTop: '1px solid #eee' }}>
+                                            <span className="info-label">📊 Nota Final:</span>
+                                            <span className="info-value" style={{ 
+                                                fontWeight: 'bold', 
+                                                color: m.calificacionFinal >= 10.5 ? '#4caf50' : '#f44336',
+                                                fontSize: '1.1em'
+                                            }}>
+                                                {m.calificacionFinal}
                                             </span>
                                         </div>
                                     )}
                                 </div>
 
-                                {/* Acciones según estado */}
-                                <div className="card-actions" style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
-                                    {m.estado === "ACTIVA" ? (
-                                        <>
-                                            {/* Botón para retirarse (cambiar a RETIRADA) */}
-                                            <button
-                                                onClick={() => handleRetirarse(m.seccionId)}
+                                {/* Pie de la tarjeta */}
+                                <div className="card-footer">
+                                    <div className="fecha-info">
+                                        <div className="fecha-item">
+                                            <span className="fecha-label">Inicio:</span>
+                                            <span className="fecha-value">
+                                                {m.fechaInicioSeccion ? new Date(m.fechaInicioSeccion).toLocaleDateString("es-ES") : '---'}
+                                            </span>
+                                        </div>
+                                        {m.fechaFinSeccion && (
+                                            <div className="fecha-item">
+                                                <span className="fecha-label">Fin:</span>
+                                                <span className="fecha-value">
+                                                    {new Date(m.fechaFinSeccion).toLocaleDateString("es-ES")}
+                                                </span>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Acciones según estado */}
+                                    <div className="card-actions" style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
+                                        {m.estado === "ACTIVA" ? (
+                                            <>
+                                                <button
+                                                    onClick={() => handleRetirarse(m.seccionId)}
+                                                    style={{
+                                                        backgroundColor: '#ff9800',
+                                                        color: 'white',
+                                                        border: 'none',
+                                                        borderRadius: '4px',
+                                                        padding: '8px 12px',
+                                                        cursor: 'pointer',
+                                                        fontSize: '0.9em',
+                                                        flex: 1
+                                                    }}
+                                                >
+                                                    📋 Retirarse
+                                                </button>
+                                                
+                                                <button
+                                                    onClick={() => handleEliminar(m.seccionId)}
+                                                    style={{
+                                                        backgroundColor: '#d32f2f',
+                                                        color: 'white',
+                                                        border: 'none',
+                                                        borderRadius: '4px',
+                                                        padding: '8px 12px',
+                                                        cursor: 'pointer',
+                                                        fontSize: '0.9em',
+                                                        flex: 1
+                                                    }}
+                                                >
+                                                    🗑️ Darse de Baja
+                                                </button>
+                                            </>
+                                        ) : (
+                                            <button 
+                                                disabled 
                                                 style={{
-                                                    backgroundColor: '#ff9800',
-                                                    color: 'white',
-                                                    border: 'none',
+                                                    backgroundColor: '#e0e0e0',
+                                                    color: '#888',
+                                                    width: '100%',
+                                                    cursor: 'default',
                                                     borderRadius: '4px',
-                                                    padding: '8px 12px',
-                                                    cursor: 'pointer',
-                                                    fontSize: '0.9em',
-                                                    flex: 1
+                                                    padding: '8px',
+                                                    border: 'none',
+                                                    fontWeight: 'bold'
                                                 }}
                                             >
-                                                📋 Retirarse
+                                                🔒 Curso Cerrado
                                             </button>
-                                            
-                                            {/* Botón para eliminar definitivamente */}
-                                            <button
-                                                onClick={() => handleEliminar(m.seccionId)}
-                                                style={{
-                                                    backgroundColor: '#d32f2f',
-                                                    color: 'white',
-                                                    border: 'none',
-                                                    borderRadius: '4px',
-                                                    padding: '8px 12px',
-                                                    cursor: 'pointer',
-                                                    fontSize: '0.9em',
-                                                    flex: 1
-                                                }}
-                                            >
-                                                🗑️ Darse de Baja
-                                            </button>
-                                        </>
-                                    ) : (
-                                        <button 
-                                            disabled 
-                                            style={{
-                                                backgroundColor: '#e0e0e0',
-                                                color: '#888',
-                                                width: '100%',
-                                                cursor: 'default',
-                                                borderRadius: '4px',
-                                                padding: '8px',
-                                                border: 'none',
-                                                fontWeight: 'bold'
-                                            }}
-                                        >
-                                            🔒 Curso Cerrado
-                                        </button>
-                                    )}
+                                        )}
+                                    </div>
                                 </div>
                             </div>
-                           
-                            {/* Badge de fecha de matrícula */}
-                            <div className="estudiantes-badge" style={{ 
-                                top: '-10px', 
-                                right: '-5px', 
-                                left: 'auto', 
-                                bottom: 'auto',
-                                fontSize: '0.7em',
-                                padding: '4px 8px',
-                                boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-                            }}>
-                                📅 {new Date(m.fechaMatricula).toLocaleDateString("es-ES")}
-                            </div>
-                        </div>
-                    ))}
+                        );
+                    })}
                 </div>
             )}
         </div>

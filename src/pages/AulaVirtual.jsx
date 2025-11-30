@@ -1,7 +1,8 @@
 // src/pages/AulaVirtual.jsx
-import React, { useState, useEffect, useRef } from 'react'; // 👈 Agregamos useRef
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
+import CrearRecursoModal from '../components/CrearRecursoModal'; // 👇 IMPORTAR EL NUEVO MODAL
 import '../styles/AulaVirtual.css';
 
 const BASE_URL = 'https://plataforma-edu-back-gpcsh9h7fddkfvfb.chilecentral-01.azurewebsites.net';
@@ -12,69 +13,60 @@ export default function AulaVirtual() {
     const [sesionActiva, setSesionActiva] = useState(null);
     const [loading, setLoading] = useState(true);
     
-    // Estados para los acordeones
+    // Estados visuales
     const [showTematica, setShowTematica] = useState(true);
     const [showResultado, setShowResultado] = useState(true);
 
-    // 🔒 OBTENER EL ROL DEL USUARIO
-    const userRole = localStorage.getItem('userRole');
+    // Estados para Crear Recurso
+    const [showModalRecurso, setShowModalRecurso] = useState(false);
+    const [momentoSeleccionado, setMomentoSeleccionado] = useState(null);
 
-    // Referencia para la barra de pestañas (scroll container)
+    const userRole = localStorage.getItem('userRole');
     const tabsContainerRef = useRef(null);
 
-    // 1. CARGA DE DATOS Y SELECCIÓN INTELIGENTE
-    useEffect(() => {
-        const fetchSesiones = async () => {
-            try {
-                const response = await axios.get(`${BASE_URL}/api/secciones/${seccionId}/sesiones`, { withCredentials: true });
-                const sesionesData = response.data || [];
-                
-                // Ordenar cronológicamente
-                sesionesData.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
-                setSesiones(sesionesData);
-                
-                // --- LÓGICA: ENCONTRAR LA SESIÓN MÁS CERCANA ---
-                if (sesionesData.length > 0) {
-                    // Obtenemos la fecha de hoy en formato YYYY-MM-DD para comparar strings (evita problemas de hora)
-                    const hoy = new Date().toISOString().split('T')[0];
-                    
-                    // Buscamos la primera sesión que sea HOY o DESPUÉS de hoy
-                    let sesionObjetivo = sesionesData.find(s => s.fecha >= hoy);
-
-                    // Si no hay sesiones futuras (el curso terminó), seleccionamos la última
-                    if (!sesionObjetivo) {
-                        sesionObjetivo = sesionesData[sesionesData.length - 1];
-                    }
-
-                    setSesionActiva(sesionObjetivo);
-                }
-            } catch (error) {
-                console.error("Error cargando el aula:", error);
-            } finally {
-                setLoading(false);
+    // Función para recargar los datos (se pasa al modal para que actualice al crear)
+    const fetchSesiones = async () => {
+        try {
+            const response = await axios.get(`${BASE_URL}/api/secciones/${seccionId}/sesiones`, { withCredentials: true });
+            const sesionesData = response.data || [];
+            sesionesData.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+            setSesiones(sesionesData);
+            
+            // Si ya había una sesión activa seleccionada, la actualizamos para ver el nuevo recurso
+            if (sesionActiva) {
+                const actualizada = sesionesData.find(s => s.id === sesionActiva.id);
+                if (actualizada) setSesionActiva(actualizada);
+            } else if (sesionesData.length > 0) {
+                const hoy = new Date().toISOString().split('T')[0];
+                const sesionActual = sesionesData.find(s => s.fecha >= hoy) || sesionesData[0];
+                setSesionActiva(sesionActual);
             }
-        };
+        } catch (error) {
+            console.error("Error cargando el aula:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
+    useEffect(() => {
         fetchSesiones();
     }, [seccionId]);
 
-    // 2. EFECTO: AUTO-SCROLL AL BOTÓN ACTIVO ("APUNTAR")
     useEffect(() => {
         if (sesionActiva && tabsContainerRef.current) {
-            // Buscamos el botón por su ID único en el DOM
             const btnId = `tab-btn-${sesionActiva.id}`;
             const activeBtn = document.getElementById(btnId);
-
             if (activeBtn) {
-                // Hacemos que el navegador mueva el scroll hasta centrar ese botón
-                activeBtn.scrollIntoView({ 
-                    behavior: 'smooth', 
-                    block: 'nearest', 
-                    inline: 'center' 
-                });
+                activeBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
             }
         }
-    }, [sesionActiva]); // Se ejecuta cada vez que cambia la sesión activa
+    }, [sesionActiva?.id]);
+
+    // Handler para abrir el modal
+    const handleAbrirModal = (momento) => {
+        setMomentoSeleccionado(momento);
+        setShowModalRecurso(true);
+    };
 
     const RecursoCard = ({ recurso }) => {
         let icono = '📄';
@@ -102,30 +94,21 @@ export default function AulaVirtual() {
 
     if (loading) return <div style={{padding: 40, textAlign: 'center'}}>Cargando aula virtual...</div>;
 
-    if (!sesionActiva) return (
-        <div style={{padding: 40, textAlign: 'center', color: '#666'}}>
-            <h2>📭 No hay sesiones programadas</h2>
-            <p>El calendario de clases aún no ha sido generado.</p>
-        </div>
-    );
+    if (!sesionActiva) return <div style={{padding: 40, textAlign: 'center', color: '#666'}}><h2>📭 No hay sesiones programadas</h2></div>;
 
     const recursosAntes = sesionActiva.recursos?.filter(r => r.momento === 'ANTES') || [];
     const recursosDurante = sesionActiva.recursos?.filter(r => r.momento === 'DURANTE') || [];
     const recursosDespues = sesionActiva.recursos?.filter(r => r.momento === 'DESPUES') || [];
-
     const indexActiva = sesiones.findIndex(s => s.id === sesionActiva.id) + 1;
 
     return (
         <div className="aula-container">
-            {/* TABS SUPERIORES */}
             <div style={{fontWeight: 'bold', marginBottom: '10px', color: '#666'}}>Sesiones de clase:</div>
-            
-            {/* Agregamos la referencia 'ref' aquí */}
             <div className="sesiones-tabs" ref={tabsContainerRef}>
                 {sesiones.map((sesion, index) => (
                     <button 
                         key={sesion.id}
-                        id={`tab-btn-${sesion.id}`} // 🆔 ID ÚNICO PARA EL SCROLL
+                        id={`tab-btn-${sesion.id}`}
                         className={`tab-btn ${sesion.id === sesionActiva.id ? 'active' : ''}`}
                         onClick={() => setSesionActiva(sesion)}
                         title={sesion.fecha}
@@ -135,95 +118,84 @@ export default function AulaVirtual() {
                 ))}
             </div>
 
-            {/* AREA DE CONTENIDO */}
             <div className="sesion-header-card">
                 <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '10px'}}>
                     <div>
-                        <div className="sesion-titulo-badge">
-                            Sesión {indexActiva}
-                        </div>
+                        <div className="sesion-titulo-badge">Sesión {indexActiva}</div>
                         <span style={{marginLeft: 15, color: '#555', fontWeight: 600}}>
                             📅 {new Date(sesionActiva.fecha).toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}
                         </span>
-                        
-                        {/* Indicador visual si es la sesión de HOY */}
                         {new Date(sesionActiva.fecha).toISOString().split('T')[0] === new Date().toISOString().split('T')[0] && (
-                            <span style={{marginLeft: 10, color: '#2e7d32', fontWeight: 'bold', backgroundColor: '#e8f5e9', padding: '2px 8px', borderRadius: '4px', fontSize: '0.8em'}}>
-                                📍 HOY
-                            </span>
+                            <span style={{marginLeft: 10, color: '#2e7d32', fontWeight: 'bold', backgroundColor: '#e8f5e9', padding: '2px 8px', borderRadius: '4px', fontSize: '0.8em'}}>📍 HOY</span>
                         )}
                     </div>
-                    
                     {userRole === 'PROFESOR' && (
-                        <button 
-                            className="btn-asistencia" 
-                            onClick={() => alert("🛠️ Funcionalidad de Asistencias: Pendiente de implementar")}
-                        >
-                            📋 Gestionar Asistencias
-                        </button>
-                    )}
-                </div>
-
-                {/* Acordeones */}
-                <div className="acordeon-item">
-                    <div className="acordeon-header" onClick={() => setShowTematica(!showTematica)}>
-                        <span>📄 Temática / Contenido</span>
-                        <span>{showTematica ? '▲' : '▼'}</span>
-                    </div>
-                    {showTematica && (
-                        <div className="acordeon-content">
-                            {sesionActiva.tema || "El profesor aún no ha definido el tema."}
-                        </div>
+                        <button className="btn-asistencia" onClick={() => alert("🛠️ Funcionalidad de Asistencias: Pendiente")}>📋 Gestionar Asistencias</button>
                     )}
                 </div>
 
                 <div className="acordeon-item">
-                    <div className="acordeon-header" onClick={() => setShowResultado(!showResultado)}>
-                        <span>🎯 Resultado de aprendizaje</span>
-                        <span>{showResultado ? '▲' : '▼'}</span>
-                    </div>
-                    {showResultado && (
-                        <div className="acordeon-content">
-                            {sesionActiva.descripcion || "Sin descripción."}
-                        </div>
-                    )}
+                    <div className="acordeon-header" onClick={() => setShowTematica(!showTematica)}><span>📄 Temática / Contenido</span><span>{showTematica ? '▲' : '▼'}</span></div>
+                    {showTematica && <div className="acordeon-content">{sesionActiva.tema || "El profesor aún no ha definido el tema."}</div>}
+                </div>
+                <div className="acordeon-item">
+                    <div className="acordeon-header" onClick={() => setShowResultado(!showResultado)}><span>🎯 Resultado de aprendizaje</span><span>{showResultado ? '▲' : '▼'}</span></div>
+                    {showResultado && <div className="acordeon-content">{sesionActiva.descripcion || "Sin descripción."}</div>}
                 </div>
             </div>
 
-            {/* 3. COLUMNAS: ANTES - DURANTE - DESPUÉS */}
             <div className="fases-grid">
-                
                 {/* COLUMNA 1: ANTES */}
                 <div className="fase-columna fase-antes">
-                    <div className="fase-titulo">
-                        <span>⏮️</span> ANTES
-                    </div>
+                    <div className="fase-titulo"><span>⏮️</span> ANTES</div>
                     <p className="fase-desc">Preparación previa</p>
                     {recursosAntes.length === 0 && <div className="empty-recurso">Sin recursos previos</div>}
                     {recursosAntes.map(r => <RecursoCard key={r.id} recurso={r} />)}
+                    
+                    {/* ➕ BOTÓN AGREGAR (SOLO PROFESOR) */}
+                    {userRole === 'PROFESOR' && (
+                        <button className="btn-add-recurso" onClick={() => handleAbrirModal('ANTES')}>+</button>
+                    )}
                 </div>
 
                 {/* COLUMNA 2: DURANTE */}
                 <div className="fase-columna fase-durante">
-                    <div className="fase-titulo">
-                        <span>🔥</span> DURANTE
-                    </div>
+                    <div className="fase-titulo"><span>🔥</span> DURANTE</div>
                     <p className="fase-desc">Material de clase</p>
                     {recursosDurante.length === 0 && <div className="empty-recurso">Sin material de clase</div>}
                     {recursosDurante.map(r => <RecursoCard key={r.id} recurso={r} />)}
+
+                    {/* ➕ BOTÓN AGREGAR (SOLO PROFESOR) */}
+                    {userRole === 'PROFESOR' && (
+                        <button className="btn-add-recurso" onClick={() => handleAbrirModal('DURANTE')}>+</button>
+                    )}
                 </div>
 
                 {/* COLUMNA 3: DESPUÉS */}
                 <div className="fase-columna fase-despues">
-                    <div className="fase-titulo">
-                        <span>⏭️</span> DESPUÉS
-                    </div>
+                    <div className="fase-titulo"><span>⏭️</span> DESPUÉS</div>
                     <p className="fase-desc">Tareas y refuerzo</p>
                     {recursosDespues.length === 0 && <div className="empty-recurso">Sin tareas asignadas</div>}
                     {recursosDespues.map(r => <RecursoCard key={r.id} recurso={r} />)}
-                </div>
 
+                    {/* ➕ BOTÓN AGREGAR (SOLO PROFESOR) */}
+                    {userRole === 'PROFESOR' && (
+                        <button className="btn-add-recurso" onClick={() => handleAbrirModal('DESPUES')}>+</button>
+                    )}
+                </div>
             </div>
+
+            {/* MODAL PARA CREAR RECURSO */}
+            <CrearRecursoModal 
+                isOpen={showModalRecurso}
+                onClose={() => setShowModalRecurso(false)}
+                sesionId={sesionActiva.id}
+                momentoInicial={momentoSeleccionado} // Pasamos la columna donde hizo click
+                onRecursoCreado={() => {
+                    fetchSesiones(); // Recargamos para ver el nuevo recurso
+                    setShowModalRecurso(false);
+                }}
+            />
         </div>
     );
 }

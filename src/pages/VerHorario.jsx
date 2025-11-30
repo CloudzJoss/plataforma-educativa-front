@@ -27,24 +27,35 @@ export default function VerHorario() {
                     // Endpoint de matrículas activas
                     const res = await axios.get(`${BASE_URL}/api/matriculas/mis-matriculas/activas`, { withCredentials: true });
                     
-                    // 🛠️ CORRECCIÓN DE MAPEO: Usamos las propiedades directas de la matrícula
+                    console.log("🔍 Datos crudos del backend:", res.data); // Mantiene esto para depurar si hace falta
+
                     dataNormalizada = res.data.map(matricula => {
                         const seccionBase = matricula.seccion || {};
+                        const cursoBase = seccionBase.curso || {}; // Por si viene anidado profundamente
                         
-                        // Buscamos horarios en todas las posibles ubicaciones
+                        // 1. BUSCAR HORARIOS (Prioridad: Matricula > Sección)
                         const horariosReales = matricula.horarios || matricula.horariosSeccion || seccionBase.horarios || [];
+
+                        // 2. BUSCAR NOMBRE DEL CURSO (Búsqueda profunda)
+                        // A veces viene en la raíz, a veces dentro de 'seccion', a veces dentro de 'seccion.curso'
+                        const nombreReal = 
+                            matricula.tituloCurso ||           // 1. Nivel Raíz (DTO aplanado)
+                            matricula.nombreCurso ||           // 2. Variante de nombre
+                            seccionBase.tituloCurso ||         // 3. Dentro de sección (DTO)
+                            cursoBase.titulo ||                // 4. Dentro de seccion -> curso (Entidad pura)
+                            seccionBase.nombre ||              // 5. Nombre de la sección
+                            'Curso sin nombre';
 
                         return {
                             id: matricula.seccionId || seccionBase.id || matricula.id,
                             
-                            // 🚨 AQUÍ ESTABA EL ERROR: 
-                            // Priorizamos 'matricula.tituloCurso' (como en MisMatriculas)
-                            tituloCurso: matricula.tituloCurso || seccionBase.tituloCurso || seccionBase.nombre || 'Curso sin nombre',
+                            // Asignamos el nombre encontrado
+                            tituloCurso: nombreReal,
                             
                             // Priorizamos 'matricula.aulaSeccion'
                             aula: matricula.aulaSeccion || seccionBase.aula || 'Virtual',
                             
-                            // Nombre secundario (a veces el backend manda nombre de sección vs título de curso)
+                            // Nombre secundario (opcional)
                             nombre: matricula.nombreSeccion || seccionBase.nombre,
                             
                             horarios: horariosReales

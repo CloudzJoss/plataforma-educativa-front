@@ -1,8 +1,8 @@
 // src/pages/AulaVirtual.jsx
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
-import CrearRecursoModal from '../components/CrearRecursoModal'; // 👈 IMPORTANTE: Importar el modal
+import CrearRecursoModal from '../components/CrearRecursoModal';
 import '../styles/AulaVirtual.css';
 
 const BASE_URL = 'https://plataforma-edu-back-gpcsh9h7fddkfvfb.chilecentral-01.azurewebsites.net';
@@ -23,9 +23,17 @@ export default function AulaVirtual() {
 
     const userRole = localStorage.getItem('userRole');
     const tabsContainerRef = useRef(null);
+    
+    // Ref para mantener el ID actual sin causar re-renders en fetchSesiones
+    const activeSessionIdRef = useRef(null);
 
-    // Función principal de carga (la sacamos del useEffect para poder reusarla al crear recurso)
-    const fetchSesiones = async () => {
+    // Mantener el ref sincronizado con el estado
+    useEffect(() => {
+        activeSessionIdRef.current = sesionActiva?.id;
+    }, [sesionActiva]);
+
+    // Función principal de carga (Memoizada con useCallback)
+    const fetchSesiones = useCallback(async () => {
         try {
             const response = await axios.get(`${BASE_URL}/api/secciones/${seccionId}/sesiones`, { withCredentials: true });
             const sesionesData = response.data || [];
@@ -35,12 +43,14 @@ export default function AulaVirtual() {
             setSesiones(sesionesData);
             
             // Lógica de Selección Inteligente
-            // Si ya hay una sesión activa seleccionada, tratamos de mantenerla (actualizada con los nuevos recursos)
-            if (sesionActiva) {
-                const sesionActualizada = sesionesData.find(s => s.id === sesionActiva.id);
+            // Usamos el Ref para ver si había una sesión seleccionada previamente
+            const currentId = activeSessionIdRef.current;
+            
+            if (currentId) {
+                const sesionActualizada = sesionesData.find(s => s.id === currentId);
                 if (sesionActualizada) {
                     setSesionActiva(sesionActualizada);
-                    return; // Salimos para no sobrescribir la selección del usuario
+                    return; 
                 }
             }
 
@@ -58,14 +68,14 @@ export default function AulaVirtual() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [seccionId]); // Solo depende de seccionId
 
-    // 1. Carga inicial
+    // 1. Carga inicial (Ahora sí incluye fetchSesiones)
     useEffect(() => {
         fetchSesiones();
-    }, [seccionId]);
+    }, [fetchSesiones]);
 
-    // 2. Auto-scroll
+    // 2. Auto-scroll (Dependencia corregida a sesionActiva completo)
     useEffect(() => {
         if (sesionActiva && tabsContainerRef.current) {
             const btnId = `tab-btn-${sesionActiva.id}`;
@@ -74,7 +84,7 @@ export default function AulaVirtual() {
                 activeBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
             }
         }
-    }, [sesionActiva?.id]); // Usamos encadenamiento opcional para evitar errores si es null
+    }, [sesionActiva]); 
 
     // Handler para abrir el modal
     const handleAbrirModal = (momento) => {
@@ -200,7 +210,6 @@ export default function AulaVirtual() {
                     {recursosAntes.length === 0 && <div className="empty-recurso">Sin recursos previos</div>}
                     {recursosAntes.map(r => <RecursoCard key={r.id} recurso={r} />)}
                     
-                    {/* ➕ BOTÓN SOLO PROFESOR */}
                     {userRole === 'PROFESOR' && (
                         <button className="btn-add-recurso" onClick={() => handleAbrirModal('ANTES')}>+</button>
                     )}
@@ -213,7 +222,6 @@ export default function AulaVirtual() {
                     {recursosDurante.length === 0 && <div className="empty-recurso">Sin material de clase</div>}
                     {recursosDurante.map(r => <RecursoCard key={r.id} recurso={r} />)}
 
-                    {/* ➕ BOTÓN SOLO PROFESOR */}
                     {userRole === 'PROFESOR' && (
                         <button className="btn-add-recurso" onClick={() => handleAbrirModal('DURANTE')}>+</button>
                     )}
@@ -226,7 +234,6 @@ export default function AulaVirtual() {
                     {recursosDespues.length === 0 && <div className="empty-recurso">Sin tareas asignadas</div>}
                     {recursosDespues.map(r => <RecursoCard key={r.id} recurso={r} />)}
 
-                    {/* ➕ BOTÓN SOLO PROFESOR */}
                     {userRole === 'PROFESOR' && (
                         <button className="btn-add-recurso" onClick={() => handleAbrirModal('DESPUES')}>+</button>
                     )}
@@ -242,7 +249,6 @@ export default function AulaVirtual() {
                     sesionId={sesionActiva.id}
                     momentoInicial={momentoSeleccionado}
                     onRecursoCreado={() => {
-                        // Recargamos los datos para ver el nuevo recurso
                         fetchSesiones(); 
                     }}
                 />

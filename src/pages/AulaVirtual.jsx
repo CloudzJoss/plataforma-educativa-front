@@ -2,7 +2,12 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
+
+// Componentes
 import CrearRecursoModal from '../components/CrearRecursoModal';
+import VerRecursoModal from '../components/VerRecursoModal'; // 🆕 IMPORTAR EL VISOR
+
+// Estilos
 import '../styles/AulaVirtual.css';
 
 const BASE_URL = 'https://plataforma-edu-back-gpcsh9h7fddkfvfb.chilecentral-01.azurewebsites.net';
@@ -13,13 +18,17 @@ export default function AulaVirtual() {
     const [sesionActiva, setSesionActiva] = useState(null);
     const [loading, setLoading] = useState(true);
     
-    // Estados visuales
+    // Estados visuales (Acordeones)
     const [showTematica, setShowTematica] = useState(true);
     const [showResultado, setShowResultado] = useState(true);
 
-    // Estados para el Modal de Recursos
+    // Estados para el Modal de CREAR Recurso
     const [showModalRecurso, setShowModalRecurso] = useState(false);
     const [momentoSeleccionado, setMomentoSeleccionado] = useState(null);
+
+    // 🆕 Estados para el Modal de VER Recurso (Visor)
+    const [showVerModal, setShowVerModal] = useState(false);
+    const [recursoSeleccionado, setRecursoSeleccionado] = useState(null);
 
     const userRole = localStorage.getItem('userRole');
     const tabsContainerRef = useRef(null);
@@ -68,14 +77,14 @@ export default function AulaVirtual() {
         } finally {
             setLoading(false);
         }
-    }, [seccionId]); // Solo depende de seccionId
+    }, [seccionId]); 
 
-    // 1. Carga inicial (Ahora sí incluye fetchSesiones)
+    // 1. Carga inicial
     useEffect(() => {
         fetchSesiones();
     }, [fetchSesiones]);
 
-    // 2. Auto-scroll (Dependencia corregida a sesionActiva completo)
+    // 2. Auto-scroll
     useEffect(() => {
         if (sesionActiva && tabsContainerRef.current) {
             const btnId = `tab-btn-${sesionActiva.id}`;
@@ -86,17 +95,31 @@ export default function AulaVirtual() {
         }
     }, [sesionActiva]); 
 
-    // Handler para abrir el modal
-    const handleAbrirModal = (momento) => {
+    // Handler para abrir el modal de CREAR (Profesor)
+    const handleAbrirModalCrear = (momento) => {
         setMomentoSeleccionado(momento);
         setShowModalRecurso(true);
     };
 
+    // 🆕 Handler para abrir el modal de VER (Visor)
+    const handleVisualizarRecurso = (recurso) => {
+        setRecursoSeleccionado(recurso);
+        setShowVerModal(true);
+    };
+
+    // 🆕 Handler para cerrar el modal de VER
+    const handleCerrarVisor = () => {
+        setRecursoSeleccionado(null);
+        setShowVerModal(false);
+    };
+
+    // Componente Tarjeta Interno
     const RecursoCard = ({ recurso }) => {
         let icono = '📄';
         if (recurso.tipoArchivo === 'LINK') icono = '🔗';
         if (recurso.tipoArchivo === 'VIDEO') icono = '▶️';
         if (recurso.tipoArchivo === 'TAREA') icono = '📝';
+        if (recurso.tipoArchivo === 'IMAGEN') icono = '🖼️';
 
         return (
             <div className="recurso-card">
@@ -106,11 +129,19 @@ export default function AulaVirtual() {
                         <span className="recurso-tipo">{recurso.tipoArchivo || 'Recurso'}</span>
                         <div className="recurso-titulo">{recurso.titulo}</div>
                     </div>
-                    <span style={{color: '#999', fontSize: '1.2em'}}>◯</span> 
+                    {/* Indicador visual simple */}
+                    <span style={{color: '#999', fontSize: '1.2em', cursor:'default'}}>◯</span> 
                 </div>
                 <div className="recurso-footer">
                     <span className="recurso-fecha">Publicado: {new Date().toLocaleDateString()}</span>
-                    <button className="btn-ver" onClick={() => window.open(recurso.url, '_blank')}>Ver</button>
+                    
+                    {/* 🆕 BOTÓN VER ACTUALIZADO: Abre el Modal en lugar de window.open */}
+                    <button 
+                        className="btn-ver" 
+                        onClick={() => handleVisualizarRecurso(recurso)}
+                    >
+                        Ver
+                    </button>
                 </div>
             </div>
         );
@@ -135,6 +166,7 @@ export default function AulaVirtual() {
         <div className="aula-container">
             <div style={{fontWeight: 'bold', marginBottom: '10px', color: '#666'}}>Sesiones de clase:</div>
             
+            {/* TABS DE SESIONES */}
             <div className="sesiones-tabs" ref={tabsContainerRef}>
                 {sesiones.map((sesion, index) => (
                     <button 
@@ -149,6 +181,7 @@ export default function AulaVirtual() {
                 ))}
             </div>
 
+            {/* CARD DE CABECERA (INFO SESIÓN) */}
             <div className="sesion-header-card">
                 <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '10px'}}>
                     <div>
@@ -176,6 +209,7 @@ export default function AulaVirtual() {
                     )}
                 </div>
 
+                {/* Acordeón Temática */}
                 <div className="acordeon-item">
                     <div className="acordeon-header" onClick={() => setShowTematica(!showTematica)}>
                         <span>📄 Temática / Contenido</span>
@@ -188,6 +222,7 @@ export default function AulaVirtual() {
                     )}
                 </div>
 
+                {/* Acordeón Resultado */}
                 <div className="acordeon-item">
                     <div className="acordeon-header" onClick={() => setShowResultado(!showResultado)}>
                         <span>🎯 Resultado de aprendizaje</span>
@@ -201,6 +236,7 @@ export default function AulaVirtual() {
                 </div>
             </div>
 
+            {/* GRID DE FASES (ANTES, DURANTE, DESPUES) */}
             <div className="fases-grid">
                 
                 {/* COLUMNA 1: ANTES */}
@@ -211,7 +247,7 @@ export default function AulaVirtual() {
                     {recursosAntes.map(r => <RecursoCard key={r.id} recurso={r} />)}
                     
                     {userRole === 'PROFESOR' && (
-                        <button className="btn-add-recurso" onClick={() => handleAbrirModal('ANTES')}>+</button>
+                        <button className="btn-add-recurso" onClick={() => handleAbrirModalCrear('ANTES')}>+</button>
                     )}
                 </div>
 
@@ -223,7 +259,7 @@ export default function AulaVirtual() {
                     {recursosDurante.map(r => <RecursoCard key={r.id} recurso={r} />)}
 
                     {userRole === 'PROFESOR' && (
-                        <button className="btn-add-recurso" onClick={() => handleAbrirModal('DURANTE')}>+</button>
+                        <button className="btn-add-recurso" onClick={() => handleAbrirModalCrear('DURANTE')}>+</button>
                     )}
                 </div>
 
@@ -235,13 +271,13 @@ export default function AulaVirtual() {
                     {recursosDespues.map(r => <RecursoCard key={r.id} recurso={r} />)}
 
                     {userRole === 'PROFESOR' && (
-                        <button className="btn-add-recurso" onClick={() => handleAbrirModal('DESPUES')}>+</button>
+                        <button className="btn-add-recurso" onClick={() => handleAbrirModalCrear('DESPUES')}>+</button>
                     )}
                 </div>
 
             </div>
 
-            {/* MODAL GLOBAL */}
+            {/* MODAL 1: CREAR RECURSO (Solo Profesores) */}
             {sesionActiva && (
                 <CrearRecursoModal 
                     isOpen={showModalRecurso}
@@ -253,6 +289,14 @@ export default function AulaVirtual() {
                     }}
                 />
             )}
+
+            {/* 🆕 MODAL 2: VISUALIZADOR DE RECURSOS (Para todos) */}
+            <VerRecursoModal 
+                isOpen={showVerModal}
+                onClose={handleCerrarVisor}
+                recurso={recursoSeleccionado}
+            />
+
         </div>
     );
 }

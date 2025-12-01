@@ -1,5 +1,5 @@
 import React from 'react';
-import '../styles/MisRecursoModal.css';
+import '../styles/VerRecursoModal.css';
 
 export default function VerRecursoModal({ isOpen, onClose, recurso }) {
     if (!isOpen || !recurso) return null;

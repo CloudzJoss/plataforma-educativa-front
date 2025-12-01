@@ -4,8 +4,8 @@ import { useParams } from 'react-router-dom';
 import axios from 'axios';
 
 // Componentes
-import CrearRecursoModal from '../components/CrearRecursoModal';
-import VerRecursoModal from './VerRecursoModal'; // IMPORTAR EL VISOR
+import CrearRecursoModal from '../components/CrearRecursoModal.jsx';
+import VerRecursoModal from '../components/VerRecursoModal.jsx'; // IMPORTAR EL VISOR
 
 // Estilos
 import '../styles/AulaVirtual.css';

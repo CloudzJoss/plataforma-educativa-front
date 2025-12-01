@@ -1,5 +1,4 @@
 // src/pages/AulaVirtual.jsx
-// src/pages/AulaVirtual.jsx
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
@@ -7,6 +6,8 @@ import axios from 'axios';
 // Componentes
 import CrearRecursoModal from '../components/CrearRecursoModal.jsx';
 import VerRecursoModal from '../components/VerRecursoModal.jsx';
+// ✅ IMPORTAMOS EL NUEVO MODAL
+import EditarInfoSesionModal from '../components/EditarInfoSesionModal.jsx';
 
 // Estilos
 import '../styles/AulaVirtual.css';
@@ -19,15 +20,18 @@ export default function AulaVirtual() {
     const [sesionActiva, setSesionActiva] = useState(null);
     const [loading, setLoading] = useState(true);
     
-    // Estados visuales
+    // Estados visuales del acordeón
     const [showTematica, setShowTematica] = useState(true);
     const [showResultado, setShowResultado] = useState(true);
 
-    // Estados para Modales
+    // Estados para Modales de Recursos
     const [showModalRecurso, setShowModalRecurso] = useState(false);
     const [momentoSeleccionado, setMomentoSeleccionado] = useState(null);
     const [showVerModal, setShowVerModal] = useState(false);
     const [recursoSeleccionado, setRecursoSeleccionado] = useState(null);
+
+    // ✅ ESTADO PARA MODAL DE EDICIÓN DE INFO
+    const [showEditarInfoModal, setShowEditarInfoModal] = useState(false);
 
     const userRole = localStorage.getItem('userRole');
     const tabsContainerRef = useRef(null);
@@ -37,14 +41,9 @@ export default function AulaVirtual() {
         activeSessionIdRef.current = sesionActiva?.id;
     }, [sesionActiva]);
 
-    // --- 🛠️ FUNCIÓN PARA CORREGIR FECHAS ---
-    // Evita el desfase de zona horaria construyendo la fecha localmente
     const formatearFecha = (fechaString) => {
         if (!fechaString) return '';
-        // Asumiendo formato YYYY-MM-DD que viene del backend
         const [anio, mes, dia] = fechaString.split('-');
-        // Creamos la fecha usando argumentos numéricos (Año, Mes-1, Día)
-        // Esto crea la fecha en hora LOCAL, evitando que se reste un día.
         const fecha = new Date(+anio, +mes - 1, +dia);
         
         return fecha.toLocaleDateString('es-ES', { 
@@ -54,26 +53,21 @@ export default function AulaVirtual() {
         });
     };
 
-    // Función para detectar si es "HOY" comparando strings, no objetos Date (más seguro)
     const esHoy = (fechaString) => {
         if (!fechaString) return false;
-        // Obtenemos la fecha local de hoy en formato YYYY-MM-DD
         const hoy = new Date();
         const year = hoy.getFullYear();
         const month = String(hoy.getMonth() + 1).padStart(2, '0');
         const day = String(hoy.getDate()).padStart(2, '0');
         const hoyString = `${year}-${month}-${day}`;
-        
         return fechaString === hoyString;
     };
-    // ----------------------------------------
 
     const fetchSesiones = useCallback(async () => {
         try {
             const response = await axios.get(`${BASE_URL}/api/secciones/${seccionId}/sesiones`, { withCredentials: true });
             const sesionesData = response.data || [];
             
-            // Ordenar por fecha string directamente
             sesionesData.sort((a, b) => a.fecha.localeCompare(b.fecha));
             setSesiones(sesionesData);
             
@@ -87,7 +81,6 @@ export default function AulaVirtual() {
             }
 
             if (sesionesData.length > 0) {
-                // Buscar la sesión más cercana a hoy
                 const hoy = new Date().toISOString().split('T')[0];
                 let sesionObjetivo = sesionesData.find(s => s.fecha >= hoy);
                 if (!sesionObjetivo) {
@@ -131,6 +124,12 @@ export default function AulaVirtual() {
         setShowVerModal(false);
     };
 
+    // ✅ MANEJADOR PARA ABRIR EDICIÓN (Evita propagación del click al acordeón)
+    const handleAbrirEdicion = (e) => {
+        e.stopPropagation();
+        setShowEditarInfoModal(true);
+    };
+
     const RecursoCard = ({ recurso }) => {
         let icono = '📄';
         if (recurso.tipoArchivo === 'LINK') icono = '🔗';
@@ -170,13 +169,10 @@ export default function AulaVirtual() {
         </div>
     );
 
-    // Ordenamiento de recursos (Nuevos abajo)
     const ordenarRecursos = (lista) => lista?.sort((a, b) => a.id - b.id) || [];
-    
     const recursosAntes = ordenarRecursos(sesionActiva.recursos?.filter(r => r.momento === 'ANTES'));
     const recursosDurante = ordenarRecursos(sesionActiva.recursos?.filter(r => r.momento === 'DURANTE'));
     const recursosDespues = ordenarRecursos(sesionActiva.recursos?.filter(r => r.momento === 'DESPUES'));
-
     const indexActiva = sesiones.findIndex(s => s.id === sesionActiva.id) + 1;
 
     return (
@@ -203,12 +199,9 @@ export default function AulaVirtual() {
                         <div className="sesion-titulo-badge">
                             Sesión {indexActiva}
                         </div>
-                        {/* ✅ USO DE LA FUNCIÓN CORREGIDA */}
                         <span style={{marginLeft: 15, color: '#555', fontWeight: 600, textTransform: 'capitalize'}}>
                             📅 {formatearFecha(sesionActiva.fecha)}
                         </span>
-                        
-                        {/* ✅ USO DE LA FUNCIÓN esHoy */}
                         {esHoy(sesionActiva.fecha) && (
                             <span style={{marginLeft: 10, color: '#2e7d32', fontWeight: 'bold', backgroundColor: '#e8f5e9', padding: '2px 8px', borderRadius: '4px', fontSize: '0.8em'}}>
                                 📍 HOY
@@ -219,25 +212,40 @@ export default function AulaVirtual() {
                     {userRole === 'PROFESOR' && (
                         <button 
                             className="btn-asistencia" 
-                            onClick={() => alert("🛠️ Funcionalidad de Asistencias: Pendiente de implementar")}
+                            onClick={() => alert("Funcionalidad de Asistencias pendiente")}
                         >
                             📋 Gestionar Asistencias
                         </button>
                     )}
                 </div>
 
+                {/* --- ACORDEÓN TEMA --- */}
                 <div className="acordeon-item">
                     <div className="acordeon-header" onClick={() => setShowTematica(!showTematica)}>
-                        <span>📄 Temática / Contenido</span>
+                        <div style={{display: 'flex', alignItems: 'center', gap: '10px'}}>
+                            <span>📄 Temática / Contenido</span>
+                            {/* BOTÓN EDITAR PARA EL PROFESOR */}
+                            {userRole === 'PROFESOR' && (
+                                <button 
+                                    className="btn-icon-edit"
+                                    onClick={handleAbrirEdicion}
+                                    title="Editar temática y resultado"
+                                    style={{border: 'none', background: 'transparent', cursor: 'pointer', fontSize: '1.2em'}}
+                                >
+                                    ✏️
+                                </button>
+                            )}
+                        </div>
                         <span>{showTematica ? '▲' : '▼'}</span>
                     </div>
                     {showTematica && (
                         <div className="acordeon-content">
-                            {sesionActiva.tema || "El profesor aún no ha definido el tema."}
+                            {sesionActiva.tema || <span style={{color: '#999', fontStyle: 'italic'}}>El profesor aún no ha definido el tema.</span>}
                         </div>
                     )}
                 </div>
 
+                {/* --- ACORDEÓN RESULTADO DE APRENDIZAJE --- */}
                 <div className="acordeon-item">
                     <div className="acordeon-header" onClick={() => setShowResultado(!showResultado)}>
                         <span>🎯 Resultado de aprendizaje</span>
@@ -245,21 +253,20 @@ export default function AulaVirtual() {
                     </div>
                     {showResultado && (
                         <div className="acordeon-content">
-                            {sesionActiva.descripcion || "Sin descripción."}
+                            {/* ✅ Usamos .resultado en lugar de .descripcion */}
+                            {sesionActiva.resultado || <span style={{color: '#999', fontStyle: 'italic'}}>Sin resultado de aprendizaje definido.</span>}
                         </div>
                     )}
                 </div>
             </div>
 
             <div className="fases-grid">
-                
                 {/* COLUMNA 1: ANTES */}
                 <div className="fase-columna fase-antes">
                     <div className="fase-titulo"><span>⏮️</span> ANTES</div>
                     <p className="fase-desc">Preparación previa</p>
                     {recursosAntes.length === 0 && <div className="empty-recurso">Sin recursos previos</div>}
                     {recursosAntes.map(r => <RecursoCard key={r.id} recurso={r} />)}
-                    
                     {userRole === 'PROFESOR' && (
                         <button className="btn-add-recurso" onClick={() => handleAbrirModalCrear('ANTES')}>+</button>
                     )}
@@ -271,7 +278,6 @@ export default function AulaVirtual() {
                     <p className="fase-desc">Material de clase</p>
                     {recursosDurante.length === 0 && <div className="empty-recurso">Sin material de clase</div>}
                     {recursosDurante.map(r => <RecursoCard key={r.id} recurso={r} />)}
-
                     {userRole === 'PROFESOR' && (
                         <button className="btn-add-recurso" onClick={() => handleAbrirModalCrear('DURANTE')}>+</button>
                     )}
@@ -283,23 +289,20 @@ export default function AulaVirtual() {
                     <p className="fase-desc">Tareas y refuerzo</p>
                     {recursosDespues.length === 0 && <div className="empty-recurso">Sin tareas asignadas</div>}
                     {recursosDespues.map(r => <RecursoCard key={r.id} recurso={r} />)}
-
                     {userRole === 'PROFESOR' && (
                         <button className="btn-add-recurso" onClick={() => handleAbrirModalCrear('DESPUES')}>+</button>
                     )}
                 </div>
-
             </div>
 
+            {/* MODALES */}
             {sesionActiva && (
                 <CrearRecursoModal 
                     isOpen={showModalRecurso}
                     onClose={() => setShowModalRecurso(false)}
                     sesionId={sesionActiva.id}
                     momentoInicial={momentoSeleccionado}
-                    onRecursoCreado={() => {
-                        fetchSesiones(); 
-                    }}
+                    onRecursoCreado={fetchSesiones}
                 />
             )}
 
@@ -308,6 +311,16 @@ export default function AulaVirtual() {
                 onClose={handleCerrarVisor}
                 recurso={recursoSeleccionado}
             />
+
+            {/* ✅ RENDERIZADO DEL MODAL DE EDICIÓN */}
+            {sesionActiva && (
+                <EditarInfoSesionModal
+                    isOpen={showEditarInfoModal}
+                    onClose={() => setShowEditarInfoModal(false)}
+                    sesion={sesionActiva}
+                    onUpdate={fetchSesiones}
+                />
+            )}
 
         </div>
     );

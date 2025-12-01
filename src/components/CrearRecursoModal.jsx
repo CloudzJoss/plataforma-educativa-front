@@ -6,7 +6,7 @@ const BASE_URL = 'https://plataforma-edu-back-gpcsh9h7fddkfvfb.chilecentral-01.a
 
 export default function CrearRecursoModal({ isOpen, onClose, sesionId, momentoInicial, onRecursoCreado }) {
     const [titulo, setTitulo] = useState('');
-    const [descripcion, setDescripcion] = useState(''); // 🆕 Nuevo campo
+    const [descripcion, setDescripcion] = useState(''); 
     const [url, setUrl] = useState('');
     const [archivo, setArchivo] = useState(null); // Para manejar el input file
     
@@ -41,32 +41,48 @@ export default function CrearRecursoModal({ isOpen, onClose, sesionId, momentoIn
         setError(null);
 
         try {
-            // Validación básica
+            // --- 1. Validaciones ---
             if (!titulo.trim()) throw new Error("El título es obligatorio");
             if (!esArchivoFisico && !url.trim()) throw new Error("La URL es obligatoria");
             if (esArchivoFisico && !archivo) throw new Error("Debes adjuntar un archivo");
 
-            // Preparar el payload
-            // NOTA: Si fuera subida real de archivos, usaríamos FormData. 
-            // Por ahora, simulamos que la URL es el nombre del archivo para que el backend no falle.
-            const valorUrl = esArchivoFisico ? `archivos/${archivo.name}` : url;
+            // --- 2. Preparar FormData (CORRECCIÓN PRINCIPAL) ---
+            const formData = new FormData();
+            
+            // Campos básicos
+            formData.append('titulo', titulo);
+            formData.append('tipoArchivo', tipoArchivo);
+            formData.append('momento', momento);
+            formData.append('sesionId', sesionId);
+            
+            // Campo opcional descripción (solo si tiene texto para evitar enviar "undefined")
+            if (descripcion) {
+                formData.append('descripcion', descripcion);
+            }
 
-            const payload = {
-                titulo,
-                descripcion, // Asegúrate de agregar este campo en tu Entity y DTO del Backend si quieres guardarlo
-                url: valorUrl,
-                tipoArchivo,
-                momento,
-                sesionId: sesionId
-            };
+            // Campos condicionales según el DTO de Java
+            if (esArchivoFisico) {
+                // 'archivo' coincide con: private MultipartFile archivo;
+                formData.append('archivo', archivo); 
+            } else {
+                // 'urlExterna' coincide con: private String urlExterna;
+                formData.append('urlExterna', url); 
+            }
 
-            await axios.post(`${BASE_URL}/api/recursos`, payload, { withCredentials: true });
+            // --- 3. Enviar al Backend ---
+            // Axios detecta FormData y configura automáticamente el header 'multipart/form-data'
+            await axios.post(`${BASE_URL}/api/recursos`, formData, { 
+                withCredentials: true 
+            });
             
             onRecursoCreado(); 
             onClose();
+
         } catch (err) {
             console.error("Error creando recurso:", err);
-            setError(err.message || "No se pudo guardar el recurso.");
+            // Intentar obtener el mensaje de error del backend si existe
+            const mensajeBackend = err.response?.data?.message || err.response?.data;
+            setError(mensajeBackend || err.message || "No se pudo guardar el recurso.");
         } finally {
             setLoading(false);
         }
@@ -74,7 +90,7 @@ export default function CrearRecursoModal({ isOpen, onClose, sesionId, momentoIn
 
     return (
         <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
-            <div className="modal fixed-modal" style={{ maxWidth: '600px' }}> {/* Un poco más ancho */}
+            <div className="modal fixed-modal" style={{ maxWidth: '600px' }}>
                 {/* Botón X superior derecho */}
                 <button className="modal-close" onClick={onClose}>×</button>
                 
@@ -184,7 +200,7 @@ export default function CrearRecursoModal({ isOpen, onClose, sesionId, momentoIn
                                 marginTop: '10px',
                                 fontSize: '0.9em'
                             }}>
-                                {error}
+                                {typeof error === 'string' ? error : JSON.stringify(error)}
                             </div>
                         )}
 

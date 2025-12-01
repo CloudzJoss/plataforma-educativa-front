@@ -5,7 +5,7 @@ import axios from 'axios';
 
 // Componentes
 import CrearRecursoModal from '../components/CrearRecursoModal';
-import VerRecursoModal from '../components/VerRecursoModal'; // 🆕 IMPORTAR EL VISOR
+import VerRecursoModal from './VerRecursoModal'; // IMPORTAR EL VISOR
 
 // Estilos
 import '../styles/AulaVirtual.css';

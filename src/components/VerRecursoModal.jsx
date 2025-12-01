@@ -124,7 +124,7 @@ export default function VerRecursoModal({ isOpen, onClose, recurso }) {
                 <div className="modal-footer-simple">
                     <button className="btn-secondary" onClick={onClose}>Cerrar</button>
                     <a href={recurso.url} target="_blank" rel="noreferrer" className="btn-primary-outline">
-                        Abrir en nueva pestaña ↗
+                        Descargar ↗
                     </a>
                 </div>
             </div>

@@ -6,7 +6,7 @@ import axios from 'axios';
 
 // Componentes
 import CrearRecursoModal from '../components/CrearRecursoModal.jsx';
-import VerRecursoModal from '../components/VerRecursoModal.jsx'; // IMPORTAR EL VISOR
+import VerRecursoModal from '../components/VerRecursoModal.jsx';
 
 // Estilos
 import '../styles/AulaVirtual.css';
@@ -19,43 +19,65 @@ export default function AulaVirtual() {
     const [sesionActiva, setSesionActiva] = useState(null);
     const [loading, setLoading] = useState(true);
     
-    // Estados visuales (Acordeones)
+    // Estados visuales
     const [showTematica, setShowTematica] = useState(true);
     const [showResultado, setShowResultado] = useState(true);
 
-    // Estados para el Modal de CREAR Recurso
+    // Estados para Modales
     const [showModalRecurso, setShowModalRecurso] = useState(false);
     const [momentoSeleccionado, setMomentoSeleccionado] = useState(null);
-
-    // 🆕 Estados para el Modal de VER Recurso (Visor)
     const [showVerModal, setShowVerModal] = useState(false);
     const [recursoSeleccionado, setRecursoSeleccionado] = useState(null);
 
     const userRole = localStorage.getItem('userRole');
     const tabsContainerRef = useRef(null);
-    
-    // Ref para mantener el ID actual sin causar re-renders en fetchSesiones
     const activeSessionIdRef = useRef(null);
 
-    // Mantener el ref sincronizado con el estado
     useEffect(() => {
         activeSessionIdRef.current = sesionActiva?.id;
     }, [sesionActiva]);
 
-    // Función principal de carga (Memoizada con useCallback)
+    // --- 🛠️ FUNCIÓN PARA CORREGIR FECHAS ---
+    // Evita el desfase de zona horaria construyendo la fecha localmente
+    const formatearFecha = (fechaString) => {
+        if (!fechaString) return '';
+        // Asumiendo formato YYYY-MM-DD que viene del backend
+        const [anio, mes, dia] = fechaString.split('-');
+        // Creamos la fecha usando argumentos numéricos (Año, Mes-1, Día)
+        // Esto crea la fecha en hora LOCAL, evitando que se reste un día.
+        const fecha = new Date(+anio, +mes - 1, +dia);
+        
+        return fecha.toLocaleDateString('es-ES', { 
+            weekday: 'long', 
+            day: 'numeric', 
+            month: 'long' 
+        });
+    };
+
+    // Función para detectar si es "HOY" comparando strings, no objetos Date (más seguro)
+    const esHoy = (fechaString) => {
+        if (!fechaString) return false;
+        // Obtenemos la fecha local de hoy en formato YYYY-MM-DD
+        const hoy = new Date();
+        const year = hoy.getFullYear();
+        const month = String(hoy.getMonth() + 1).padStart(2, '0');
+        const day = String(hoy.getDate()).padStart(2, '0');
+        const hoyString = `${year}-${month}-${day}`;
+        
+        return fechaString === hoyString;
+    };
+    // ----------------------------------------
+
     const fetchSesiones = useCallback(async () => {
         try {
             const response = await axios.get(`${BASE_URL}/api/secciones/${seccionId}/sesiones`, { withCredentials: true });
             const sesionesData = response.data || [];
             
-            // Ordenar cronológicamente las sesiones por fecha
-            sesionesData.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+            // Ordenar por fecha string directamente
+            sesionesData.sort((a, b) => a.fecha.localeCompare(b.fecha));
             setSesiones(sesionesData);
             
-            // Lógica de Selección Inteligente
-            // Usamos el Ref para ver si había una sesión seleccionada previamente
             const currentId = activeSessionIdRef.current;
-            
             if (currentId) {
                 const sesionActualizada = sesionesData.find(s => s.id === currentId);
                 if (sesionActualizada) {
@@ -64,8 +86,8 @@ export default function AulaVirtual() {
                 }
             }
 
-            // Si es la primera carga o se perdió la referencia
             if (sesionesData.length > 0) {
+                // Buscar la sesión más cercana a hoy
                 const hoy = new Date().toISOString().split('T')[0];
                 let sesionObjetivo = sesionesData.find(s => s.fecha >= hoy);
                 if (!sesionObjetivo) {
@@ -80,12 +102,10 @@ export default function AulaVirtual() {
         }
     }, [seccionId]); 
 
-    // 1. Carga inicial
     useEffect(() => {
         fetchSesiones();
     }, [fetchSesiones]);
 
-    // 2. Auto-scroll
     useEffect(() => {
         if (sesionActiva && tabsContainerRef.current) {
             const btnId = `tab-btn-${sesionActiva.id}`;
@@ -96,25 +116,21 @@ export default function AulaVirtual() {
         }
     }, [sesionActiva]); 
 
-    // Handler para abrir el modal de CREAR (Profesor)
     const handleAbrirModalCrear = (momento) => {
         setMomentoSeleccionado(momento);
         setShowModalRecurso(true);
     };
 
-    // 🆕 Handler para abrir el modal de VER (Visor)
     const handleVisualizarRecurso = (recurso) => {
         setRecursoSeleccionado(recurso);
         setShowVerModal(true);
     };
 
-    // 🆕 Handler para cerrar el modal de VER
     const handleCerrarVisor = () => {
         setRecursoSeleccionado(null);
         setShowVerModal(false);
     };
 
-    // Componente Tarjeta Interno
     const RecursoCard = ({ recurso }) => {
         let icono = '📄';
         if (recurso.tipoArchivo === 'LINK') icono = '🔗';
@@ -130,13 +146,10 @@ export default function AulaVirtual() {
                         <span className="recurso-tipo">{recurso.tipoArchivo || 'Recurso'}</span>
                         <div className="recurso-titulo">{recurso.titulo}</div>
                     </div>
-                    {/* Indicador visual simple */}
                     <span style={{color: '#999', fontSize: '1.2em', cursor:'default'}}>◯</span> 
                 </div>
                 <div className="recurso-footer">
                     <span className="recurso-fecha">Publicado: {new Date().toLocaleDateString()}</span>
-                    
-                    {/* 🆕 BOTÓN VER ACTUALIZADO: Abre el Modal en lugar de window.open */}
                     <button 
                         className="btn-ver" 
                         onClick={() => handleVisualizarRecurso(recurso)}
@@ -157,18 +170,12 @@ export default function AulaVirtual() {
         </div>
     );
 
-    // ✅ CORRECCIÓN DE ORDEN: .sort((a, b) => a.id - b.id) asegura que el más nuevo salga al final
-    const recursosAntes = sesionActiva.recursos
-        ?.filter(r => r.momento === 'ANTES')
-        .sort((a, b) => a.id - b.id) || [];
-
-    const recursosDurante = sesionActiva.recursos
-        ?.filter(r => r.momento === 'DURANTE')
-        .sort((a, b) => a.id - b.id) || [];
-
-    const recursosDespues = sesionActiva.recursos
-        ?.filter(r => r.momento === 'DESPUES')
-        .sort((a, b) => a.id - b.id) || [];
+    // Ordenamiento de recursos (Nuevos abajo)
+    const ordenarRecursos = (lista) => lista?.sort((a, b) => a.id - b.id) || [];
+    
+    const recursosAntes = ordenarRecursos(sesionActiva.recursos?.filter(r => r.momento === 'ANTES'));
+    const recursosDurante = ordenarRecursos(sesionActiva.recursos?.filter(r => r.momento === 'DURANTE'));
+    const recursosDespues = ordenarRecursos(sesionActiva.recursos?.filter(r => r.momento === 'DESPUES'));
 
     const indexActiva = sesiones.findIndex(s => s.id === sesionActiva.id) + 1;
 
@@ -176,7 +183,6 @@ export default function AulaVirtual() {
         <div className="aula-container">
             <div style={{fontWeight: 'bold', marginBottom: '10px', color: '#666'}}>Sesiones de clase:</div>
             
-            {/* TABS DE SESIONES */}
             <div className="sesiones-tabs" ref={tabsContainerRef}>
                 {sesiones.map((sesion, index) => (
                     <button 
@@ -191,18 +197,19 @@ export default function AulaVirtual() {
                 ))}
             </div>
 
-            {/* CARD DE CABECERA (INFO SESIÓN) */}
             <div className="sesion-header-card">
                 <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '10px'}}>
                     <div>
                         <div className="sesion-titulo-badge">
                             Sesión {indexActiva}
                         </div>
-                        <span style={{marginLeft: 15, color: '#555', fontWeight: 600}}>
-                            📅 {new Date(sesionActiva.fecha).toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}
+                        {/* ✅ USO DE LA FUNCIÓN CORREGIDA */}
+                        <span style={{marginLeft: 15, color: '#555', fontWeight: 600, textTransform: 'capitalize'}}>
+                            📅 {formatearFecha(sesionActiva.fecha)}
                         </span>
                         
-                        {new Date(sesionActiva.fecha).toISOString().split('T')[0] === new Date().toISOString().split('T')[0] && (
+                        {/* ✅ USO DE LA FUNCIÓN esHoy */}
+                        {esHoy(sesionActiva.fecha) && (
                             <span style={{marginLeft: 10, color: '#2e7d32', fontWeight: 'bold', backgroundColor: '#e8f5e9', padding: '2px 8px', borderRadius: '4px', fontSize: '0.8em'}}>
                                 📍 HOY
                             </span>
@@ -219,7 +226,6 @@ export default function AulaVirtual() {
                     )}
                 </div>
 
-                {/* Acordeón Temática */}
                 <div className="acordeon-item">
                     <div className="acordeon-header" onClick={() => setShowTematica(!showTematica)}>
                         <span>📄 Temática / Contenido</span>
@@ -232,7 +238,6 @@ export default function AulaVirtual() {
                     )}
                 </div>
 
-                {/* Acordeón Resultado */}
                 <div className="acordeon-item">
                     <div className="acordeon-header" onClick={() => setShowResultado(!showResultado)}>
                         <span>🎯 Resultado de aprendizaje</span>
@@ -246,7 +251,6 @@ export default function AulaVirtual() {
                 </div>
             </div>
 
-            {/* GRID DE FASES (ANTES, DURANTE, DESPUES) */}
             <div className="fases-grid">
                 
                 {/* COLUMNA 1: ANTES */}
@@ -287,7 +291,6 @@ export default function AulaVirtual() {
 
             </div>
 
-            {/* MODAL 1: CREAR RECURSO (Solo Profesores) */}
             {sesionActiva && (
                 <CrearRecursoModal 
                     isOpen={showModalRecurso}
@@ -300,7 +303,6 @@ export default function AulaVirtual() {
                 />
             )}
 
-            {/* 🆕 MODAL 2: VISUALIZADOR DE RECURSOS (Para todos) */}
             <VerRecursoModal 
                 isOpen={showVerModal}
                 onClose={handleCerrarVisor}

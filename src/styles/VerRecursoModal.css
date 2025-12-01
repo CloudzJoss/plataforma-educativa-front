@@ -1,3 +1,6 @@
+/*src/styles/VerRecursoModal.css*/
+/* src/styles/VerRecursoModal.css */
+
 /* Fondo oscuro semi-transparente */
 .modal-overlay {
     position: fixed;
@@ -5,89 +8,117 @@
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.6);
+    background-color: rgba(28, 36, 44, 0.8); /* Usando tono dark con opacidad */
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 1000;
+    z-index: 2000; /* Asegurar que esté encima de todo */
+    padding: 15px; /* Margen de seguridad en móviles */
 }
 
 /* Contenedor principal del modal */
 .modal-container-large {
     background-color: white;
-    width: 90%;
-    height: 90vh; /* Ocupa el 90% de la altura de la pantalla */
+    width: 100%;
     max-width: 1100px;
-    border-radius: 8px;
+    height: 90vh; /* 90% de la altura de la pantalla */
+    border-radius: 12px;
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+    animation: fadeInModal 0.3s ease-out;
 }
 
-/* Cabecera Naranja */
+@keyframes fadeInModal {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+/* Cabecera con colores del cliente */
 .modal-header-orange {
-    background-color: #ff9800; /* Color naranja similar al de tu imagen */
+    background-color: var(--brand-dark); /* Antes naranja, ahora Dark Brand */
     color: white;
     padding: 15px 20px;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    border-bottom: 4px solid var(--brand-yellow); /* Acento amarillo */
 }
 
 .header-content {
     display: flex;
     align-items: center;
     gap: 15px;
+    overflow: hidden; /* Evita desborde de texto */
 }
 
 .header-icon {
     font-size: 1.5rem;
-    background: rgba(255,255,255,0.2);
-    padding: 8px;
+    background: rgba(255,255,255,0.1);
+    padding: 10px;
     border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 45px;
+    height: 45px;
 }
 
 .header-title {
     margin: 0;
     font-size: 1.1rem;
     font-weight: bold;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis; /* Puntos suspensivos si el título es largo */
+    max-width: 50vw;
 }
 
 .header-subtitle {
     font-size: 0.8rem;
-    opacity: 0.9;
+    opacity: 0.8;
     text-transform: uppercase;
+    display: block;
+    color: var(--brand-yellow);
 }
 
 .btn-close-white {
     background: none;
     border: none;
     color: white;
-    font-size: 2rem;
+    font-size: 2.2rem;
     cursor: pointer;
-    line-height: 1;
+    line-height: 0.8;
+    padding: 0 5px;
+    transition: color 0.2s;
+}
+
+.btn-close-white:hover {
+    color: var(--brand-yellow);
 }
 
 /* Cuerpo del modal */
 .modal-body-content {
-    flex: 1; /* Toma todo el espacio disponible */
-    background-color: #f4f4f4;
-    overflow: hidden;
+    flex: 1; 
+    background-color: #f4f6f8;
+    overflow: hidden; /* Importante para iframes */
     display: flex;
     justify-content: center;
     align-items: center;
     position: relative;
+    width: 100%;
 }
 
-/* Estilo para el IFRAME (PDF y Videos) */
+/* IFRAME y Video */
 .recurso-iframe {
     width: 100%;
     height: 100%;
     border: none;
+    background: white;
 }
 
-/* Estilo para Imágenes */
+/* Imágenes */
 .imagen-container {
     width: 100%;
     height: 100%;
@@ -95,53 +126,66 @@
     justify-content: center;
     align-items: center;
     overflow: auto;
+    padding: 20px;
 }
 
 .recurso-img {
     max-width: 100%;
     max-height: 100%;
     object-fit: contain;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
 }
 
-/* Estilo para el Fallback de LINK (El cohete) */
+/* Fallback Link */
 .link-fallback {
     text-align: center;
-    padding: 40px;
+    padding: 30px;
     background: white;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-    max-width: 500px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    max-width: 90%;
+    width: 400px;
 }
 
 .icon-rocket {
     font-size: 4rem;
     margin-bottom: 20px;
+    animation: floatRocket 3s ease-in-out infinite;
+}
+
+@keyframes floatRocket {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
 }
 
 .link-text {
-    color: #666;
+    color: var(--brand-dark);
     margin-bottom: 25px;
     line-height: 1.5;
+    font-size: 1rem;
 }
 
 .btn-visualizar {
-    background-color: #d35400; /* Un naranja más oscuro para el botón */
+    background-color: var(--brand-blue);
     color: white;
-    padding: 10px 25px;
+    padding: 12px 30px;
     text-decoration: none;
-    border-radius: 25px;
+    border-radius: 50px;
     font-weight: bold;
-    transition: background 0.3s;
+    display: inline-block;
+    transition: all 0.3s;
+    box-shadow: 0 4px 10px rgba(4, 92, 148, 0.3);
 }
 
 .btn-visualizar:hover {
-    background-color: #e67e22;
+    background-color: #034874; /* Azul más oscuro */
+    transform: translateY(-2px);
 }
 
 /* Footer simple */
 .modal-footer-simple {
-    padding: 10px 20px;
-    border-top: 1px solid #ddd;
+    padding: 15px 25px;
+    border-top: 1px solid #eee;
     display: flex;
     justify-content: flex-end;
     gap: 10px;
@@ -149,19 +193,67 @@
 }
 
 .btn-secondary {
-    padding: 8px 16px;
+    padding: 10px 20px;
     border: 1px solid #ddd;
-    background: #f9f9f9;
+    background: #f8f9fa;
+    color: var(--brand-dark);
     cursor: pointer;
-    border-radius: 4px;
+    border-radius: 6px;
+    font-weight: 600;
+    transition: background 0.2s;
 }
 
+.btn-secondary:hover { background: #e2e6ea; }
+
 .btn-primary-outline {
-    padding: 8px 16px;
-    border: 1px solid #ff9800;
-    color: #ff9800;
+    padding: 10px 20px;
+    border: 2px solid var(--brand-blue);
+    color: var(--brand-blue);
     background: white;
     text-decoration: none;
-    border-radius: 4px;
-    font-size: 0.9rem;
+    border-radius: 6px;
+    font-weight: 700;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+}
+
+.btn-primary-outline:hover {
+    background-color: var(--brand-blue);
+    color: white;
+}
+
+/* =========================================
+   MEDIA QUERIES (RESPONSIVE MODAL)
+   ========================================= */
+
+@media (max-width: 768px) {
+    .modal-container-large {
+        width: 100%;
+        height: 100%; /* Pantalla completa en móvil para aprovechar espacio */
+        max-height: 100vh;
+        border-radius: 0; /* Sin bordes redondeados en fullscreen */
+    }
+
+    .header-title {
+        font-size: 1rem;
+        max-width: 60vw;
+    }
+
+    .modal-header-orange {
+        padding: 10px 15px;
+    }
+
+    /* En móvil, los botones del footer se apilan para ser más fáciles de tocar */
+    .modal-footer-simple {
+        flex-direction: column-reverse; /* "Cerrar" abajo */
+        gap: 10px;
+    }
+
+    .btn-secondary, .btn-primary-outline {
+        width: 100%;
+        text-align: center;
+        justify-content: center;
+        padding: 14px; /* Botones más altos para dedos */
+    }
 }

@@ -1,3 +1,4 @@
+/*/src/styles/AulaVirtual.css*/
 /* --- VARIABLES DE COLOR (Cliente) --- */
 :root {
     --brand-dark: #1c242c;   /* Texto, Fondos oscuros */
@@ -13,6 +14,8 @@
     min-height: 100vh;
     font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
     color: var(--brand-dark);
+    /* Transición suave al cambiar tamaño de ventana */
+    transition: padding 0.3s ease;
 }
 
 /* --- TABS (PESTAÑAS DE SESIONES) --- */
@@ -22,9 +25,10 @@
     overflow-x: auto;
     padding-bottom: 5px;
     margin-bottom: 25px;
-    /* Scroll suave para móviles */
+    /* Scroll suave y oculto en móviles pero funcional */
     scrollbar-width: thin;
     scrollbar-color: var(--brand-blue) transparent;
+    -webkit-overflow-scrolling: touch; /* Scroll nativo en iOS */
 }
 
 .tab-btn {
@@ -33,12 +37,14 @@
     border: 1px solid #e0e0e0;
     background-color: white;
     color: var(--brand-dark);
-    border-radius: 8px; /* Más redondeado = más amigable */
+    border-radius: 8px;
     cursor: pointer;
     font-weight: 600;
     font-size: 1rem;
     transition: all 0.3s ease;
     box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+    /* Evitar que se encojan en móvil */
+    flex-shrink: 0;
 }
 
 .tab-btn:hover {
@@ -50,9 +56,9 @@
 
 .tab-btn.active {
     background-color: var(--brand-dark);
-    color: var(--brand-yellow); /* Texto amarillo sobre fondo oscuro */
+    color: var(--brand-yellow);
     border: 1px solid var(--brand-dark);
-    border-bottom: 4px solid var(--brand-yellow); /* Línea inferior amarilla */
+    border-bottom: 4px solid var(--brand-yellow);
     box-shadow: 0 4px 8px rgba(28, 36, 44, 0.2);
 }
 
@@ -62,7 +68,7 @@
     border-radius: 12px;
     padding: 25px;
     margin-bottom: 30px;
-    box-shadow: 0 4px 15px rgba(4, 92, 148, 0.08); /* Sombra azulada muy sutil */
+    box-shadow: 0 4px 15px rgba(4, 92, 148, 0.08);
     border-left: 5px solid var(--brand-blue);
 }
 
@@ -112,26 +118,29 @@
     cursor: pointer;
     display: flex;
     justify-content: space-between;
+    align-items: center;
     font-weight: 700;
     color: var(--brand-dark);
     transition: background 0.2s;
 }
 
 .acordeon-header:hover {
-    background-color: #f8fbff; /* Azul muy pálido */
+    background-color: #f8fbff;
 }
 
 .acordeon-content {
     padding: 20px;
     background-color: #fcfcfc;
     border-top: 1px solid #edf2f7;
-    color: #555; /* Gris oscuro para lectura cómoda */
+    color: #555;
     line-height: 1.6;
+    word-wrap: break-word; /* Evita que textos largos rompan el móvil */
 }
 
-/* --- GRID DE FASES (ANTES, DURANTE, DESPUES) --- */
+/* --- GRID DE FASES (RESPONSIVE) --- */
 .fases-grid {
     display: grid;
+    /* Ajuste automático: Mínimo 280px por columna, si no cabe, baja de línea */
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
     gap: 25px;
 }
@@ -148,7 +157,6 @@
     overflow: hidden;
 }
 
-/* Barra superior de color en cada columna */
 .fase-columna::before {
     content: '';
     position: absolute;
@@ -175,18 +183,14 @@
     font-weight: 500;
 }
 
-/* COLORES ESPECÍFICOS POR FASE INTEGRANDO BRANDING */
-/* ANTES: Usamos el Azul Corporativo */
+/* COLORES POR FASE */
 .fase-antes::before { background-color: var(--brand-blue); }
 .fase-antes .fase-titulo { color: var(--brand-blue); }
 
-/* DURANTE: Usamos un Naranja/Fuego pero armonizado (o Amarillo Corporativo oscuro) */
-.fase-durante::before { background-color: #ff9800; } 
-.fase-durante .fase-titulo { color: #e65100; }
+.fase-durante::before { background-color: var(--brand-yellow); } /* Amarillo Cliente */
+.fase-durante .fase-titulo { color: #b39200; } /* Amarillo oscuro para leerse bien */
 
-/* DESPUÉS: Usamos el Amarillo Corporativo (Refuerzo/Tarea) o un tono complementario */
-/* Para mantener contraste, usaremos el amarillo corporativo en la barra, pero texto oscuro */
-.fase-despues::before { background-color: var(--brand-yellow); }
+.fase-despues::before { background-color: var(--brand-dark); }
 .fase-despues .fase-titulo { color: var(--brand-dark); }
 
 
@@ -198,14 +202,14 @@
     padding: 15px;
     margin-bottom: 15px;
     transition: all 0.3s ease;
-    border-left: 4px solid transparent; /* Preparar para hover */
+    border-left: 4px solid transparent;
     position: relative;
 }
 
 .recurso-card:hover {
     transform: translateY(-3px);
     box-shadow: 0 5px 15px rgba(0,0,0,0.05);
-    border-left-color: var(--brand-yellow); /* Branding al hacer hover */
+    border-left-color: var(--brand-yellow);
 }
 
 .recurso-header {
@@ -216,7 +220,7 @@
 
 .recurso-icon {
     font-size: 1.2rem;
-    filter: drop-shadow(0 2px 2px rgba(0,0,0,0.1));
+    min-width: 24px; /* Evita que el icono se aplaste */
 }
 
 .recurso-info { flex: 1; }
@@ -224,7 +228,7 @@
 .recurso-tipo {
     font-size: 0.7em;
     font-weight: 800;
-    color: var(--brand-blue); /* Branding */
+    color: var(--brand-blue);
     text-transform: uppercase;
     letter-spacing: 0.5px;
     margin-bottom: 4px;
@@ -253,7 +257,6 @@
     font-weight: 500;
 }
 
-/* BOTÓN "VER" ESTILIZADO */
 .btn-ver {
     background-color: transparent;
     color: var(--brand-blue);
@@ -265,6 +268,9 @@
     cursor: pointer;
     transition: all 0.2s;
     text-transform: uppercase;
+    /* Área táctil mínima recomendada para móvil */
+    min-width: 60px;
+    text-align: center;
 }
 
 .btn-ver:hover {
@@ -273,7 +279,6 @@
     box-shadow: 0 2px 5px rgba(4, 92, 148, 0.2);
 }
 
-/* ESTADO VACÍO */
 .empty-recurso {
     text-align: center;
     color: #9aa5b1;
@@ -284,7 +289,7 @@
     background-color: #fafafa;
 }
 
-/* --- BOTÓN DE AGREGAR RECURSO (+) --- */
+/* BOTÓN AGREGAR */
 .btn-add-recurso {
     background-color: #fdfdfd;
     border: 2px dashed #cbd5e0;
@@ -293,23 +298,63 @@
     font-weight: bold;
     width: 100%;
     padding: 10px;
-    margin-top: auto; /* Empuja al fondo si hay espacio */
+    margin-top: auto;
     border-radius: 10px;
     cursor: pointer;
     transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
     display: flex;
     align-items: center;
     justify-content: center;
+    min-height: 50px; /* Mejor para touch */
 }
 
 .btn-add-recurso:hover {
     background-color: #fff;
-    border-color: var(--brand-yellow); /* Amarillo branding */
+    border-color: var(--brand-yellow);
     color: var(--brand-yellow);
     box-shadow: 0 5px 15px rgba(228, 188, 4, 0.15);
     transform: scale(1.02);
 }
 
-.btn-add-recurso:active {
-    transform: scale(0.98);
+/* =========================================
+   MEDIA QUERIES (ADAPTABILIDAD MÓVIL)
+   ========================================= */
+
+/* Tablets y Móviles grandes (menor a 768px) */
+@media (max-width: 768px) {
+    .aula-container {
+        padding: 15px; /* Menos padding lateral */
+    }
+
+    /* Cabecera: Apilar elementos verticalmente */
+    .sesion-header-card > div {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .btn-asistencia {
+        float: none;
+        width: 100%; /* Botón ancho completo */
+        margin-top: 15px;
+        text-align: center;
+        padding: 12px; /* Más fácil de presionar */
+    }
+
+    .fases-grid {
+        grid-template-columns: 1fr; /* Una sola columna */
+    }
+}
+
+/* Móviles pequeños (menor a 480px) */
+@media (max-width: 480px) {
+    .tab-btn {
+        min-width: 40px;
+        height: 35px;
+        font-size: 0.9rem;
+    }
+    
+    .sesion-titulo-badge {
+        font-size: 0.8rem;
+        padding: 4px 12px;
+    }
 }

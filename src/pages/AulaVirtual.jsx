@@ -1,4 +1,5 @@
 // src/pages/AulaVirtual.jsx
+// src/pages/AulaVirtual.jsx
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
@@ -47,7 +48,7 @@ export default function AulaVirtual() {
             const response = await axios.get(`${BASE_URL}/api/secciones/${seccionId}/sesiones`, { withCredentials: true });
             const sesionesData = response.data || [];
             
-            // Ordenar cronológicamente
+            // Ordenar cronológicamente las sesiones por fecha
             sesionesData.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
             setSesiones(sesionesData);
             
@@ -156,9 +157,18 @@ export default function AulaVirtual() {
         </div>
     );
 
-    const recursosAntes = sesionActiva.recursos?.filter(r => r.momento === 'ANTES') || [];
-    const recursosDurante = sesionActiva.recursos?.filter(r => r.momento === 'DURANTE') || [];
-    const recursosDespues = sesionActiva.recursos?.filter(r => r.momento === 'DESPUES') || [];
+    // ✅ CORRECCIÓN DE ORDEN: .sort((a, b) => a.id - b.id) asegura que el más nuevo salga al final
+    const recursosAntes = sesionActiva.recursos
+        ?.filter(r => r.momento === 'ANTES')
+        .sort((a, b) => a.id - b.id) || [];
+
+    const recursosDurante = sesionActiva.recursos
+        ?.filter(r => r.momento === 'DURANTE')
+        .sort((a, b) => a.id - b.id) || [];
+
+    const recursosDespues = sesionActiva.recursos
+        ?.filter(r => r.momento === 'DESPUES')
+        .sort((a, b) => a.id - b.id) || [];
 
     const indexActiva = sesiones.findIndex(s => s.id === sesionActiva.id) + 1;
 

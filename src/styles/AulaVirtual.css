@@ -1,231 +1,302 @@
-.aula-container {
-    padding: 20px;
-    background-color: #f8f9fa;
-    min-height: 100vh;
-    font-family: 'Segoe UI', sans-serif;
+/* --- VARIABLES DE COLOR (Cliente) --- */
+:root {
+    --brand-dark: #1c242c;   /* Texto, Fondos oscuros */
+    --brand-blue: #045c94;   /* Acciones principales, Iconos */
+    --brand-yellow: #e4bc04; /* Resaltados, Estados activos, Alertas */
+    --bg-light: #f4f6f8;     /* Fondo general suave */
+    --white: #ffffff;
 }
 
-/* TABS */
+.aula-container {
+    padding: 25px;
+    background-color: var(--bg-light);
+    min-height: 100vh;
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    color: var(--brand-dark);
+}
+
+/* --- TABS (PESTAÑAS DE SESIONES) --- */
 .sesiones-tabs {
     display: flex;
     gap: 8px;
     overflow-x: auto;
-    padding-bottom: 10px;
-    margin-bottom: 20px;
+    padding-bottom: 5px;
+    margin-bottom: 25px;
+    /* Scroll suave para móviles */
+    scrollbar-width: thin;
+    scrollbar-color: var(--brand-blue) transparent;
 }
 
 .tab-btn {
-    min-width: 40px;
-    height: 35px;
-    border: 1px solid #ddd;
-    background-color: #e9ecef;
-    color: #495057;
-    border-radius: 4px;
+    min-width: 45px;
+    height: 40px;
+    border: 1px solid #e0e0e0;
+    background-color: white;
+    color: var(--brand-dark);
+    border-radius: 8px; /* Más redondeado = más amigable */
     cursor: pointer;
-    font-weight: bold;
-    transition: 0.2s;
+    font-weight: 600;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.03);
 }
 
-.tab-btn:hover { background-color: #dee2e6; }
+.tab-btn:hover {
+    background-color: var(--brand-blue);
+    color: white;
+    border-color: var(--brand-blue);
+    transform: translateY(-2px);
+}
 
 .tab-btn.active {
-    background-color: #fff;
-    border-bottom: 3px solid #ff9800;
-    color: #ff9800;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    background-color: var(--brand-dark);
+    color: var(--brand-yellow); /* Texto amarillo sobre fondo oscuro */
+    border: 1px solid var(--brand-dark);
+    border-bottom: 4px solid var(--brand-yellow); /* Línea inferior amarilla */
+    box-shadow: 0 4px 8px rgba(28, 36, 44, 0.2);
 }
 
-/* HEADER Y ACORDEONES */
+/* --- CABECERA DE SESIÓN --- */
 .sesion-header-card {
-    background: white;
-    border: 1px solid #dee2e6;
-    border-radius: 8px;
-    padding: 20px;
-    margin-bottom: 25px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    background: var(--white);
+    border-radius: 12px;
+    padding: 25px;
+    margin-bottom: 30px;
+    box-shadow: 0 4px 15px rgba(4, 92, 148, 0.08); /* Sombra azulada muy sutil */
+    border-left: 5px solid var(--brand-blue);
 }
 
 .sesion-titulo-badge {
-    background-color: #ff9800;
+    background-color: var(--brand-blue);
     color: white;
-    padding: 5px 15px;
-    border-radius: 20px;
-    font-weight: bold;
+    padding: 6px 18px;
+    border-radius: 50px;
+    font-weight: 700;
+    font-size: 0.9rem;
     display: inline-block;
     margin-bottom: 15px;
+    letter-spacing: 0.5px;
 }
 
 /* Botón Gestionar Asistencias */
 .btn-asistencia {
-    background-color: #5c6bc0; /* Indigo */
-    color: white;
-    border: none;
+    background-color: white;
+    color: var(--brand-blue);
+    border: 2px solid var(--brand-blue);
     padding: 8px 20px;
-    border-radius: 6px;
-    font-weight: 600;
+    border-radius: 8px;
+    font-weight: 700;
     cursor: pointer;
     float: right;
-    box-shadow: 0 2px 4px rgba(92, 107, 192, 0.3);
-    margin-top: -5px;
+    transition: all 0.2s;
 }
 
-.btn-asistencia:hover { background-color: #3f51b5; }
+.btn-asistencia:hover {
+    background-color: var(--brand-blue);
+    color: white;
+    box-shadow: 0 4px 10px rgba(4, 92, 148, 0.3);
+}
 
+/* --- ACORDEONES --- */
 .acordeon-item {
-    border: 1px solid #e9ecef;
-    border-radius: 6px;
-    margin-bottom: 8px;
+    border: 1px solid #edf2f7;
+    border-radius: 8px;
+    margin-bottom: 10px;
     overflow: hidden;
+    background: white;
 }
 
 .acordeon-header {
-    background-color: #fff;
-    padding: 12px 15px;
+    background-color: white;
+    padding: 15px 20px;
     cursor: pointer;
     display: flex;
     justify-content: space-between;
-    font-weight: 600;
-    color: #495057;
+    font-weight: 700;
+    color: var(--brand-dark);
+    transition: background 0.2s;
 }
 
-.acordeon-header:hover { background-color: #f8f9fa; }
+.acordeon-header:hover {
+    background-color: #f8fbff; /* Azul muy pálido */
+}
 
 .acordeon-content {
-    padding: 15px;
-    background-color: #f8f9fa;
-    border-top: 1px solid #e9ecef;
-    color: #666;
-    font-size: 0.95em;
+    padding: 20px;
+    background-color: #fcfcfc;
+    border-top: 1px solid #edf2f7;
+    color: #555; /* Gris oscuro para lectura cómoda */
+    line-height: 1.6;
 }
 
-/* GRID DE 3 COLUMNAS */
+/* --- GRID DE FASES (ANTES, DURANTE, DESPUES) --- */
 .fases-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 20px;
+    gap: 25px;
 }
 
 .fase-columna {
     background: white;
-    border: 1px solid #dee2e6;
-    border-radius: 8px;
-    padding: 15px;
+    border-radius: 12px;
+    padding: 20px;
     display: flex;
     flex-direction: column;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+    border: 1px solid #edf2f7;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Barra superior de color en cada columna */
+.fase-columna::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 6px;
 }
 
 .fase-titulo {
     font-weight: 800;
+    font-size: 1.1rem;
     margin-bottom: 5px;
     display: flex;
     align-items: center;
-    gap: 8px;
-    letter-spacing: 0.5px;
+    gap: 10px;
+    text-transform: uppercase;
 }
 
 .fase-desc {
-    font-size: 0.8em;
-    color: #888;
-    margin-bottom: 15px;
-    font-style: italic;
+    font-size: 0.85em;
+    color: #777;
+    margin-bottom: 20px;
+    font-weight: 500;
 }
 
-/* COLORES POR FASE */
+/* COLORES ESPECÍFICOS POR FASE INTEGRANDO BRANDING */
+/* ANTES: Usamos el Azul Corporativo */
+.fase-antes::before { background-color: var(--brand-blue); }
+.fase-antes .fase-titulo { color: var(--brand-blue); }
 
-/* ANTES (Azul/Lila) */
-.fase-antes { border-top: 4px solid #7e57c2; }
-.fase-antes .fase-titulo { color: #5e35b1; }
-.fase-antes .recurso-card { background-color: #f3e5f5; border-left: 3px solid #7e57c2; }
+/* DURANTE: Usamos un Naranja/Fuego pero armonizado (o Amarillo Corporativo oscuro) */
+.fase-durante::before { background-color: #ff9800; } 
+.fase-durante .fase-titulo { color: #e65100; }
 
-/* DURANTE (Verde) */
-.fase-durante { border-top: 4px solid #26a69a; }
-.fase-durante .fase-titulo { color: #00695c; }
-.fase-durante .recurso-card { background-color: #e0f2f1; border-left: 3px solid #26a69a; }
-
-/* DESPUÉS (Naranja/Rojo) */
-.fase-despues { border-top: 4px solid #ef5350; }
-.fase-despues .fase-titulo { color: #c62828; }
-.fase-despues .recurso-card { background-color: #ffebee; border-left: 3px solid #ef5350; }
+/* DESPUÉS: Usamos el Amarillo Corporativo (Refuerzo/Tarea) o un tono complementario */
+/* Para mantener contraste, usaremos el amarillo corporativo en la barra, pero texto oscuro */
+.fase-despues::before { background-color: var(--brand-yellow); }
+.fase-despues .fase-titulo { color: var(--brand-dark); }
 
 
-/* TARJETAS DE RECURSOS */
+/* --- TARJETAS DE RECURSOS --- */
 .recurso-card {
-    border-radius: 6px;
-    padding: 10px;
-    margin-bottom: 10px;
-    transition: transform 0.2s;
+    background: white;
+    border: 1px solid #eee;
+    border-radius: 10px;
+    padding: 15px;
+    margin-bottom: 15px;
+    transition: all 0.3s ease;
+    border-left: 4px solid transparent; /* Preparar para hover */
+    position: relative;
 }
 
-.recurso-card:hover { transform: translateY(-2px); }
+.recurso-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+    border-left-color: var(--brand-yellow); /* Branding al hacer hover */
+}
 
 .recurso-header {
     display: flex;
     align-items: flex-start;
-    gap: 10px;
+    gap: 12px;
+}
+
+.recurso-icon {
+    font-size: 1.2rem;
+    filter: drop-shadow(0 2px 2px rgba(0,0,0,0.1));
 }
 
 .recurso-info { flex: 1; }
 
 .recurso-tipo {
     font-size: 0.7em;
-    font-weight: bold;
-    opacity: 0.7;
+    font-weight: 800;
+    color: var(--brand-blue); /* Branding */
     text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+    display: block;
 }
 
 .recurso-titulo {
-    font-size: 0.9em;
-    font-weight: 600;
-    color: #333;
-    line-height: 1.3;
+    font-size: 0.95em;
+    font-weight: 700;
+    color: var(--brand-dark);
+    line-height: 1.4;
 }
 
 .recurso-footer {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-top: 10px;
-    padding-top: 5px;
-    border-top: 1px solid rgba(0,0,0,0.05);
+    margin-top: 12px;
+    padding-top: 8px;
+    border-top: 1px solid #f0f0f0;
 }
 
-.recurso-fecha { font-size: 0.7em; color: #888; }
+.recurso-fecha { 
+    font-size: 0.75em; 
+    color: #999; 
+    font-weight: 500;
+}
 
+/* BOTÓN "VER" ESTILIZADO */
 .btn-ver {
-    background-color: rgba(0,0,0,0.1);
-    color: #444;
-    border: none;
-    border-radius: 10px;
-    padding: 3px 10px;
+    background-color: transparent;
+    color: var(--brand-blue);
+    border: 1px solid var(--brand-blue);
+    border-radius: 20px;
+    padding: 4px 14px;
     font-size: 0.75em;
-    font-weight: bold;
+    font-weight: 700;
     cursor: pointer;
+    transition: all 0.2s;
+    text-transform: uppercase;
 }
 
-.btn-ver:hover { background-color: rgba(0,0,0,0.2); }
+.btn-ver:hover {
+    background-color: var(--brand-blue);
+    color: white;
+    box-shadow: 0 2px 5px rgba(4, 92, 148, 0.2);
+}
 
+/* ESTADO VACÍO */
 .empty-recurso {
     text-align: center;
-    color: #aaa;
-    font-size: 0.85em;
-    padding: 20px;
-    border: 1px dashed #ddd;
-    border-radius: 6px;
+    color: #9aa5b1;
+    font-size: 0.9em;
+    padding: 30px 10px;
+    border: 2px dashed #e0e0e0;
+    border-radius: 10px;
+    background-color: #fafafa;
 }
 
-/* BOTÓN DE AGREGAR RECURSO (+) */
+/* --- BOTÓN DE AGREGAR RECURSO (+) --- */
 .btn-add-recurso {
-    background-color: transparent;
-    border: 2px dashed #ccc;
-    color: #aaa;
-    font-size: 1.5rem;
+    background-color: #fdfdfd;
+    border: 2px dashed #cbd5e0;
+    color: #a0aec0;
+    font-size: 1.8rem;
     font-weight: bold;
     width: 100%;
     padding: 10px;
-    margin-top: 15px;
-    border-radius: 8px;
+    margin-top: auto; /* Empuja al fondo si hay espacio */
+    border-radius: 10px;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -233,40 +304,10 @@
 
 .btn-add-recurso:hover {
     background-color: #fff;
-    border-color: #ff9800;
-    color: #ff9800;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    border-color: var(--brand-yellow); /* Amarillo branding */
+    color: var(--brand-yellow);
+    box-shadow: 0 5px 15px rgba(228, 188, 4, 0.15);
     transform: scale(1.02);
-}
-
-.btn-add-recurso:active {
-    transform: scale(0.98);
-}
-
-/* BOTÓN GRANDE DE AGREGAR RECURSO (+) */
-.btn-add-recurso {
-    background-color: transparent;
-    border: 2px dashed #ccc;
-    color: #aaa;
-    font-size: 1.5rem;
-    font-weight: bold;
-    width: 100%;
-    padding: 12px;
-    margin-top: 15px;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.btn-add-recurso:hover {
-    background-color: #fff;
-    border-color: #ff9800; /* Naranja al pasar el mouse */
-    color: #ff9800;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.05);
-    transform: translateY(-2px);
 }
 
 .btn-add-recurso:active {

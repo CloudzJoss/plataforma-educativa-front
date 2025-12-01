@@ -6,7 +6,10 @@ import '../styles/CreateUserModal.css';
 const BASE_URL = 'https://plataforma-edu-back-gpcsh9h7fddkfvfb.chilecentral-01.azurewebsites.net';
 
 export default function CreateUserModal({ isOpen, onClose, onUserCreated }) {
-  const [nombre, setNombre] = useState('');
+  // ✅ CAMBIO: Estados separados para nombres y apellidos
+  const [nombres, setNombres] = useState('');
+  const [apellidos, setApellidos] = useState('');
+  
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rol, setRol] = useState('ALUMNO'); 
@@ -39,7 +42,8 @@ export default function CreateUserModal({ isOpen, onClose, onUserCreated }) {
 
   useEffect(() => {
     if (isOpen) {
-      setNombre(''); setEmail(''); setPassword(''); setRol('ALUMNO');
+      setNombres(''); setApellidos(''); // ✅ Resetear nuevos campos
+      setEmail(''); setPassword(''); setRol('ALUMNO');
       setError(null);
       setDniAlumno(''); setGrado(''); setNivel('SECUNDARIA');
       setDniProfesor(''); setTelefono(''); setExperiencia('');
@@ -66,8 +70,10 @@ export default function CreateUserModal({ isOpen, onClose, onUserCreated }) {
     // Formatear grado para enviar (Ej: "5º Grado")
     const gradoFinal = grado ? `${grado}º Grado` : '';
 
+    // ✅ CAMBIO: Payload ahora envía nombres y apellidos
     const payload = {
-      nombre: nombre.trim(),
+      nombres: nombres.trim(),
+      apellidos: apellidos.trim(),
       email: email.trim(),
       password: password,
       rol: rol,
@@ -86,7 +92,7 @@ export default function CreateUserModal({ isOpen, onClose, onUserCreated }) {
       }
       payload.dniAlumno = dniAlumno.trim();
       payload.nivel = nivel;
-      payload.grado = gradoFinal; // Usamos el grado formateado
+      payload.grado = gradoFinal;
     } else if (rol === 'PROFESOR') {
       if (!dniProfesor.trim() || dniProfesor.length < 8) {
         setError('El DNI del profesor debe tener al menos 8 caracteres.');
@@ -133,7 +139,14 @@ export default function CreateUserModal({ isOpen, onClose, onUserCreated }) {
           <h2 className="modal-title">Crear Nuevo Usuario</h2>
 
           <form className="auth-form" onSubmit={handleSubmit} noValidate>
-            <label> Nombre Completo* <input ref={nameInputRef} type="text" value={nombre} onChange={(e) => setNombre(e.target.value)} required /> </label>
+            {/* ✅ CAMBIO: Inputs separados para Nombres y Apellidos */}
+            <div style={{display: 'flex', gap: '10px'}}>
+                <label style={{flex: 1}}> Nombres* <input ref={nameInputRef} type="text" value={nombres} onChange={(e) => setNombres(e.target.value)} required /> 
+                </label>
+                <label style={{flex: 1}}> Apellidos* <input type="text" value={apellidos} onChange={(e) => setApellidos(e.target.value)} required /> 
+                </label>
+            </div>
+
             <label> Email* <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required /> </label>
             <label> Contraseña* (Mín. 6 caracteres) <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required /> </label>
             <label> Rol*

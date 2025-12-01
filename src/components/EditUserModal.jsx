@@ -4,7 +4,10 @@ import axios from 'axios';
 import '../styles/EditUserModal.css';
 
 export default function EditUserModal({ isOpen, onClose, userToEdit, onUserUpdated }) {
-  const [nombre, setNombre] = useState('');
+  // ✅ CAMBIO: Estados separados
+  const [nombres, setNombres] = useState('');
+  const [apellidos, setApellidos] = useState('');
+  
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -38,7 +41,10 @@ export default function EditUserModal({ isOpen, onClose, userToEdit, onUserUpdat
   // --- Cargar datos ---
   useEffect(() => {
     if (userToEdit) {
-      setNombre(userToEdit.nombre || '');
+      // ✅ CAMBIO: Cargar nombres y apellidos. Si el backend aún manda 'nombre' antiguo (por caché), lo usamos como fallback
+      setNombres(userToEdit.nombres || userToEdit.nombre || '');
+      setApellidos(userToEdit.apellidos || ''); // Si es antiguo, esto estará vacío y el usuario deberá llenarlo
+      
       setEmail(userToEdit.email || '');
       setPassword(''); 
       setError(null);
@@ -79,12 +85,14 @@ export default function EditUserModal({ isOpen, onClose, userToEdit, onUserUpdat
 
     const payload = {};
     
-    if (nombre.trim() && nombre !== userToEdit.nombre) payload.nombre = nombre.trim();
+    // ✅ CAMBIO: Detección de cambios en nombres y apellidos
+    if (nombres.trim() && nombres !== userToEdit.nombres) payload.nombres = nombres.trim();
+    if (apellidos.trim() && apellidos !== userToEdit.apellidos) payload.apellidos = apellidos.trim();
+    
     if (email.trim() && email !== userToEdit.email) payload.email = email.trim();
     if (password.trim()) payload.password = password.trim(); 
     
     if (userToEdit.rol === 'ALUMNO') {
-      // Comparamos con el grado formateado o lo enviamos siempre si cambió el input
       if (grado && gradoFinal !== userToEdit.grado) payload.grado = gradoFinal;
       if (dniAlumno.trim() && dniAlumno !== userToEdit.dniAlumno) payload.dniAlumno = dniAlumno.trim();
       if (codigoEstudiante.trim() && codigoEstudiante !== userToEdit.codigoEstudiante) payload.codigoEstudiante = codigoEstudiante.trim();
@@ -103,7 +111,7 @@ export default function EditUserModal({ isOpen, onClose, userToEdit, onUserUpdat
     }
 
     try {
-      const response = await axios.put(API_URL, payload, { withCredentials: true }); // Agregar credenciales si es necesario
+      const response = await axios.put(API_URL, payload, { withCredentials: true }); 
       onUserUpdated(response.data); 
       onClose(); 
     } catch (err) {
@@ -132,9 +140,18 @@ export default function EditUserModal({ isOpen, onClose, userToEdit, onUserUpdat
           <h2 className="modal-title">Editar Usuario (ID: {userToEdit.id})</h2>
           
           <form className="auth-form" onSubmit={handleSubmit} noValidate>
-            <label> Nombre Completo <input ref={nameInputRef} type="text" value={nombre} onChange={(e) => setNombre(e.target.value)} /> </label>
+            {/* ✅ CAMBIO: Inputs separados */}
+            <div style={{display: 'flex', gap: '10px'}}>
+                <label style={{flex: 1}}> Nombres 
+                    <input ref={nameInputRef} type="text" value={nombres} onChange={(e) => setNombres(e.target.value)} /> 
+                </label>
+                <label style={{flex: 1}}> Apellidos 
+                    <input type="text" value={apellidos} onChange={(e) => setApellidos(e.target.value)} /> 
+                </label>
+            </div>
+
             <label> Email <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} /> </label>
-            <label> Nueva Contraseña <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="********" /> </label>
+            <label> Nueva Contraseña <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="****" /> </label>
             
             {userToEdit.rol === 'ALUMNO' && (
               <>

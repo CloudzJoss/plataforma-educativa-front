@@ -1,7 +1,7 @@
 // src/components/ModalResumenAsistencia.jsx
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react'; // ✅ 1. Importar useCallback
 import axios from 'axios';
-import '../styles/ModalResumenAsistencia.css'; // Definiremos esto abajo
+import '../styles/ModalResumenAsistencia.css';
 
 const BASE_URL = 'https://plataforma-edu-back-gpcsh9h7fddkfvfb.chilecentral-01.azurewebsites.net';
 
@@ -10,13 +10,8 @@ export default function ModalResumenAsistencia({ isOpen, onClose, seccionId, nom
     const [loading, setLoading] = useState(true);
     const [stats, setStats] = useState({ presente: 0, tarde: 0, falta: 0, total: 0 });
 
-    useEffect(() => {
-        if (isOpen && seccionId) {
-            fetchHistorial();
-        }
-    }, [isOpen, seccionId]);
-
-    const fetchHistorial = async () => {
+    // ✅ 2. Envolver fetchHistorial en useCallback
+    const fetchHistorial = useCallback(async () => {
         setLoading(true);
         try {
             const response = await axios.get(
@@ -25,31 +20,39 @@ export default function ModalResumenAsistencia({ isOpen, onClose, seccionId, nom
             );
             const data = response.data;
             setAsistencias(data);
-            calcularEstadisticas(data);
+            
+            // Lógica de cálculo dentro del fetch para mantenerlo ordenado
+            let p = 0, t = 0, f = 0;
+            data.forEach(a => {
+                if (a.estado === 'PRESENTE') p++;
+                else if (a.estado === 'TARDE') t++;
+                else if (a.estado.includes('FALTA')) f++;
+            });
+            setStats({ presente: p, tarde: t, falta: f, total: data.length });
+
         } catch (error) {
             console.error("Error cargando historial", error);
         } finally {
             setLoading(false);
         }
-    };
+    }, [seccionId]); // Dependencia: solo se recrea si cambia el ID de la sección
 
-    const calcularEstadisticas = (data) => {
-        let p = 0, t = 0, f = 0;
-        data.forEach(a => {
-            if (a.estado === 'PRESENTE') p++;
-            else if (a.estado === 'TARDE') t++;
-            else if (a.estado.includes('FALTA')) f++;
-        });
-        setStats({ presente: p, tarde: t, falta: f, total: data.length });
-    };
+    // ✅ 3. Agregar fetchHistorial a las dependencias del useEffect
+    useEffect(() => {
+        if (isOpen && seccionId) {
+            fetchHistorial();
+        }
+    }, [isOpen, seccionId, fetchHistorial]);
 
     if (!isOpen) return null;
 
-    // Calculamos porcentajes para el Gráfico Cónico (Pie Chart CSS)
+    // Calculamos porcentajes para el Gráfico Cónico
     const total = stats.total > 0 ? stats.total : 1;
     const porcPresente = (stats.presente / total) * 100;
     const porcTarde = (stats.tarde / total) * 100;
-    const porcFalta = (stats.falta / total) * 100;
+    
+    // ❌ ELIMINADO: const porcFalta = ... (Causaba el error 'unused variable')
+    // El gráfico usa el resto hasta 100% automáticamente para la falta.
 
     // CSS Conic Gradient para el gráfico de torta
     const pieStyle = {

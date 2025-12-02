@@ -1,8 +1,9 @@
 // src/pages/MisMatriculas.jsx
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom'; // 👈 IMPORTANTE
-import '../styles/MisSeccionesProfesor.css';
+import { useNavigate } from 'react-router-dom';
+import ModalResumenAsistencia from '../components/ModalResumenAsistencia'; // ✅ IMPORTAMOS EL MODAL
+import '../styles/MisSeccionesProfesor.css'; // Reutilizamos estilos de tarjetas
 
 export default function MisMatriculas() {
     const [matriculas, setMatriculas] = useState([]);
@@ -10,7 +11,12 @@ export default function MisMatriculas() {
     const [error, setError] = useState(null);
     const [filtroEstado, setFiltroEstado] = useState("TODAS");
 
-    const navigate = useNavigate(); // Hook para navegar
+    // Estado para controlar el modal de asistencias
+    const [showAsistenciaModal, setShowAsistenciaModal] = useState(false);
+    const [selectedSeccionId, setSelectedSeccionId] = useState(null);
+    const [selectedCursoNombre, setSelectedCursoNombre] = useState('');
+
+    const navigate = useNavigate();
     const URL_BASE = "https://plataforma-edu-back-gpcsh9h7fddkfvfb.chilecentral-01.azurewebsites.net";
 
     const cargarMisMatriculas = useCallback(async () => {
@@ -30,26 +36,23 @@ export default function MisMatriculas() {
 
     useEffect(() => { cargarMisMatriculas(); }, [cargarMisMatriculas]);
 
+    // Función para manejar baja administrativa (solo si lo permites)
     const handleEliminar = async (seccionId) => {
-        if (!window.confirm("¿Estás seguro de cancelar tu inscripción?")) return;
+        if (!window.confirm("¿Estás seguro de solicitar la baja? Esta acción es irreversible.")) return;
         try {
             await axios.delete(`${URL_BASE}/api/matriculas/eliminar/${seccionId}`, { withCredentials: true });
-            alert("Inscripción cancelada exitosamente.");
+            alert("Baja procesada exitosamente.");
             cargarMisMatriculas(); 
         } catch (err) {
-            alert(err.response?.data?.message || "Error al eliminar la matrícula");
+            alert(err.response?.data?.message || "Error al procesar la baja");
         }
     };
 
-    const handleRetirarse = async (seccionId) => {
-        if (!window.confirm("¿Estás seguro de retirarte de este curso?")) return;
-        try {
-            await axios.delete(`${URL_BASE}/api/matriculas/retirarse/${seccionId}`, { withCredentials: true });
-            alert("Te has retirado del curso exitosamente.");
-            cargarMisMatriculas(); 
-        } catch (err) {
-            alert(err.response?.data?.message || "Error al retirarse del curso");
-        }
+    // Función para abrir el modal de asistencias
+    const handleVerAsistencias = (seccionId, nombreCurso) => {
+        setSelectedSeccionId(seccionId);
+        setSelectedCursoNombre(nombreCurso);
+        setShowAsistenciaModal(true);
     };
 
     const matriculasFiltradas = matriculas.filter(m => filtroEstado === "TODAS" || m.estado === filtroEstado);
@@ -143,18 +146,18 @@ export default function MisMatriculas() {
                                     <div className="card-actions" style={{ display: 'flex', gap: '8px', marginTop: '10px', flexWrap: 'wrap' }}>
                                         {m.estado === "ACTIVA" ? (
                                             <>
-                                                {/* 🚀 BOTÓN NUEVO: ENTRAR AL AULA */}
+                                                {/* BOTÓN ENTRAR AL AULA */}
                                                 <button
                                                     onClick={() => navigate(`/dashboard/aula/${m.seccionId}`)}
                                                     style={{
-                                                        backgroundColor: '#2e7d32', // Verde Aula
+                                                        backgroundColor: '#2e7d32',
                                                         color: 'white',
                                                         border: 'none',
                                                         borderRadius: '4px',
                                                         padding: '8px 12px',
                                                         cursor: 'pointer',
                                                         fontSize: '0.9em',
-                                                        flex: '1 1 100%', // Ocupa todo el ancho arriba
+                                                        flex: '1 1 100%',
                                                         marginBottom: '5px',
                                                         fontWeight: 'bold'
                                                     }}
@@ -162,7 +165,27 @@ export default function MisMatriculas() {
                                                     🏫 Entrar al Aula
                                                 </button>
 
-                                                <button onClick={() => handleRetirarse(m.seccionId)} style={{ backgroundColor: '#ff9800', color: 'white', border: 'none', borderRadius: '4px', padding: '8px', cursor: 'pointer', flex: 1 }}>📋 Retirarse</button>
+                                                {/* ✅ BOTÓN NUEVO: VER ASISTENCIAS (Reemplaza a Retirarse) */}
+                                                <button 
+                                                    onClick={() => handleVerAsistencias(m.seccionId, m.tituloCurso)} 
+                                                    style={{ 
+                                                        backgroundColor: '#0288d1', 
+                                                        color: 'white', 
+                                                        border: 'none', 
+                                                        borderRadius: '4px', 
+                                                        padding: '8px', 
+                                                        cursor: 'pointer', 
+                                                        flex: 1,
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        gap: '5px',
+                                                        fontWeight: 'bold'
+                                                    }}
+                                                >
+                                                    📊 Ver Asistencias
+                                                </button>
+
                                                 <button onClick={() => handleEliminar(m.seccionId)} style={{ backgroundColor: '#d32f2f', color: 'white', border: 'none', borderRadius: '4px', padding: '8px', cursor: 'pointer', flex: 1 }}>🗑️ Baja</button>
                                             </>
                                         ) : (
@@ -175,6 +198,14 @@ export default function MisMatriculas() {
                     })}
                 </div>
             )}
+
+            {/* ✅ RENDERIZAMOS EL MODAL AQUÍ */}
+            <ModalResumenAsistencia 
+                isOpen={showAsistenciaModal}
+                onClose={() => setShowAsistenciaModal(false)}
+                seccionId={selectedSeccionId}
+                nombreCurso={selectedCursoNombre}
+            />
         </div>
     );
 }

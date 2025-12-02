@@ -1,0 +1,72 @@
+.modal-resumen {
+    max-width: 500px;
+    width: 90%;
+}
+
+.stats-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    background: #f9f9f9;
+    padding: 20px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+}
+
+/* Gráfico de Torta CSS */
+.pie-chart {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+.pie-hole {
+    width: 90px;
+    height: 90px;
+    background: white;
+    border-radius: 50%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    color: #333;
+}
+
+.legend-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    font-size: 0.9rem;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.dot { width: 10px; height: 10px; border-radius: 50%; }
+.green { background: #4caf50; }
+.orange { background: #ff9800; }
+.red { background: #f44336; }
+
+.lista-scroll {
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid #eee;
+    border-radius: 8px;
+}
+
+.tabla-simple { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+.tabla-simple th { background: #eee; padding: 8px; text-align: left; position: sticky; top: 0; }
+.tabla-simple td { padding: 8px; border-bottom: 1px solid #f1f1f1; }
+
+.badge.PRESENTE { color: #4caf50; font-weight: bold; }
+.badge.TARDE { color: #ff9800; font-weight: bold; }
+.badge.FALTA_INJUSTIFICADA, .badge.FALTA_JUSTIFICADA { color: #f44336; font-weight: bold; }

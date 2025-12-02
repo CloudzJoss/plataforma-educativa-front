@@ -1,4 +1,3 @@
-// src/pages/AulaVirtual.jsx
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
@@ -7,7 +6,8 @@ import axios from 'axios';
 import CrearRecursoModal from '../components/CrearRecursoModal.jsx';
 import VerRecursoModal from '../components/VerRecursoModal.jsx';
 import EditarInfoSesionModal from '../components/EditarInfoSesionModal.jsx';
-import GestionarAsistenciaModal from '../components/GestionarAsistenciaModal.jsx'; // ✅ IMPORTACIÓN NUEVA
+// Importamos el nuevo modal de asistencia
+import GestionarAsistenciaModal from '../components/GestionarAsistenciaModal.jsx'; 
 
 // Estilos
 import '../styles/AulaVirtual.css';
@@ -33,7 +33,7 @@ export default function AulaVirtual() {
     // Estado para Modal de Edición de Info
     const [showEditarInfoModal, setShowEditarInfoModal] = useState(false);
 
-    // ✅ ESTADO PARA MODAL DE ASISTENCIA
+    // Estado para Modal de Asistencia
     const [showAsistenciaModal, setShowAsistenciaModal] = useState(false);
 
     const userRole = localStorage.getItem('userRole');
@@ -211,7 +211,7 @@ export default function AulaVirtual() {
                         )}
                     </div>
                     
-                    {/* ✅ BOTÓN GESTIONAR ASISTENCIA ACTUALIZADO */}
+                    {/* Botón Gestionar Asistencia Actualizado */}
                     {userRole === 'PROFESOR' && (
                         <button 
                             className="btn-asistencia" 
@@ -322,14 +322,13 @@ export default function AulaVirtual() {
                 />
             )}
 
-            {/* ✅ MODAL DE ASISTENCIA INTEGRADO */}
+            {/* Componente del Modal de Asistencia */}
             {sesionActiva && (
                 <GestionarAsistenciaModal
                     isOpen={showAsistenciaModal}
                     onClose={() => setShowAsistenciaModal(false)}
                     sesion={sesionActiva}
                     onGuardar={() => {
-                        // Puedes añadir lógica extra si necesitas refrescar algo al guardar
                         console.log("Asistencia guardada y modal cerrado");
                     }}
                 />

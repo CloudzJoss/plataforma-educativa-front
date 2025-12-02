@@ -1,7 +1,7 @@
 // src/components/GestionarAsistenciaModal.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react'; // ✅ 1. Importamos useCallback
 import axios from 'axios';
-import '../styles/GestionarAsistenciaModal.css'; // Crearemos este archivo después
+import '../styles/GestionarAsistenciaModal.css';
 
 const BASE_URL = 'https://plataforma-edu-back-gpcsh9h7fddkfvfb.chilecentral-01.azurewebsites.net';
 
@@ -20,13 +20,10 @@ export default function GestionarAsistenciaModal({ isOpen, onClose, sesion, onGu
         'SIN_REGISTRAR': { label: 'Sin Registrar', icon: '⚪', color: '#757575' }
     };
 
-    useEffect(() => {
-        if (isOpen && sesion) {
-            cargarAsistencia();
-        }
-    }, [isOpen, sesion]);
+    // ✅ 2. Envolvemos la función en useCallback para estabilizarla
+    const cargarAsistencia = useCallback(async () => {
+        if (!sesion) return; // Validación de seguridad
 
-    const cargarAsistencia = async () => {
         setLoading(true);
         setError(null);
         try {
@@ -34,7 +31,6 @@ export default function GestionarAsistenciaModal({ isOpen, onClose, sesion, onGu
                 `${BASE_URL}/api/asistencias/sesion/${sesion.id}`, 
                 { withCredentials: true }
             );
-            // Si viene SIN_REGISTRAR, lo mantenemos así, o visualmente podríamos preseleccionar algo
             setAlumnos(response.data);
         } catch (err) {
             console.error(err);
@@ -42,7 +38,14 @@ export default function GestionarAsistenciaModal({ isOpen, onClose, sesion, onGu
         } finally {
             setLoading(false);
         }
-    };
+    }, [sesion]); // Dependencia: Solo se recrea si cambia la sesión
+
+    // ✅ 3. Ahora podemos añadir cargarAsistencia al array de dependencias sin causar loops
+    useEffect(() => {
+        if (isOpen && sesion) {
+            cargarAsistencia();
+        }
+    }, [isOpen, sesion, cargarAsistencia]);
 
     const handleEstadoChange = (alumnoId, nuevoEstado) => {
         setAlumnos(prev => prev.map(alumno => 
@@ -67,7 +70,7 @@ export default function GestionarAsistenciaModal({ isOpen, onClose, sesion, onGu
     const handleGuardar = async () => {
         setSaving(true);
         try {
-            // Validar que no queden 'SIN_REGISTRAR' (Opcional, depende de tu regla de negocio)
+            // Validar que no queden 'SIN_REGISTRAR' (Opcional)
             const sinRegistrar = alumnos.find(a => a.estado === 'SIN_REGISTRAR');
             if (sinRegistrar) {
                 if(!window.confirm("Hay alumnos sin estado asignado. ¿Deseas continuar?")) {
@@ -80,7 +83,7 @@ export default function GestionarAsistenciaModal({ isOpen, onClose, sesion, onGu
                 sesionId: sesion.id,
                 detalles: alumnos.map(a => ({
                     alumnoId: a.alumnoId,
-                    estado: a.estado === 'SIN_REGISTRAR' ? 'FALTA_INJUSTIFICADA' : a.estado, // Default si se olvida
+                    estado: a.estado === 'SIN_REGISTRAR' ? 'FALTA_INJUSTIFICADA' : a.estado,
                     observacion: a.observacion
                 }))
             };

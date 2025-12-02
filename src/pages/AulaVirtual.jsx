@@ -6,8 +6,7 @@ import axios from 'axios';
 import CrearRecursoModal from '../components/CrearRecursoModal.jsx';
 import VerRecursoModal from '../components/VerRecursoModal.jsx';
 import EditarInfoSesionModal from '../components/EditarInfoSesionModal.jsx';
-// Importamos el nuevo modal de asistencia
-import GestionarAsistenciaModal from '../components/GestionarAsistenciaModal.jsx'; 
+import GestionarAsistenciaModal from '../components/GestionarAsistenciaModal.jsx';
 
 // Estilos
 import '../styles/AulaVirtual.css';
@@ -33,8 +32,11 @@ export default function AulaVirtual() {
     // Estado para Modal de Edición de Info
     const [showEditarInfoModal, setShowEditarInfoModal] = useState(false);
 
-    // Estado para Modal de Asistencia
+    // Estado para Modal de Asistencia (Profesor)
     const [showAsistenciaModal, setShowAsistenciaModal] = useState(false);
+
+    // ✅ NUEVO: Estado para guardar la asistencia del alumno logueado
+    const [miAsistencia, setMiAsistencia] = useState(null);
 
     const userRole = localStorage.getItem('userRole');
     const tabsContainerRef = useRef(null);
@@ -44,16 +46,12 @@ export default function AulaVirtual() {
         activeSessionIdRef.current = sesionActiva?.id;
     }, [sesionActiva]);
 
+    // Función auxiliar para fechas
     const formatearFecha = (fechaString) => {
         if (!fechaString) return '';
         const [anio, mes, dia] = fechaString.split('-');
         const fecha = new Date(+anio, +mes - 1, +dia);
-        
-        return fecha.toLocaleDateString('es-ES', { 
-            weekday: 'long', 
-            day: 'numeric', 
-            month: 'long' 
-        });
+        return fecha.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
     };
 
     const esHoy = (fechaString) => {
@@ -62,10 +60,10 @@ export default function AulaVirtual() {
         const year = hoy.getFullYear();
         const month = String(hoy.getMonth() + 1).padStart(2, '0');
         const day = String(hoy.getDate()).padStart(2, '0');
-        const hoyString = `${year}-${month}-${day}`;
-        return fechaString === hoyString;
+        return fechaString === `${year}-${month}-${day}`;
     };
 
+    // Cargar Sesiones
     const fetchSesiones = useCallback(async () => {
         try {
             const response = await axios.get(`${BASE_URL}/api/secciones/${seccionId}/sesiones`, { withCredentials: true });
@@ -86,9 +84,7 @@ export default function AulaVirtual() {
             if (sesionesData.length > 0) {
                 const hoy = new Date().toISOString().split('T')[0];
                 let sesionObjetivo = sesionesData.find(s => s.fecha >= hoy);
-                if (!sesionObjetivo) {
-                    sesionObjetivo = sesionesData[sesionesData.length - 1];
-                }
+                if (!sesionObjetivo) sesionObjetivo = sesionesData[sesionesData.length - 1];
                 setSesionActiva(sesionObjetivo);
             }
         } catch (error) {
@@ -98,40 +94,48 @@ export default function AulaVirtual() {
         }
     }, [seccionId]); 
 
+    // ✅ NUEVO: Cargar la asistencia del alumno cuando cambia la sesión activa
+    const fetchMiAsistencia = useCallback(async () => {
+        if (userRole !== 'ALUMNO' || !sesionActiva) return;
+
+        try {
+            const response = await axios.get(
+                `${BASE_URL}/api/asistencias/mi-asistencia/sesion/${sesionActiva.id}`, 
+                { withCredentials: true }
+            );
+            setMiAsistencia(response.data);
+        } catch (error) {
+            console.error("Error cargando mi asistencia:", error);
+            setMiAsistencia(null);
+        }
+    }, [sesionActiva, userRole]);
+
     useEffect(() => {
         fetchSesiones();
     }, [fetchSesiones]);
+
+    // Ejecutar fetchMiAsistencia cuando cambia la sesión activa
+    useEffect(() => {
+        if (sesionActiva) {
+            fetchMiAsistencia();
+        }
+    }, [sesionActiva, fetchMiAsistencia]);
 
     useEffect(() => {
         if (sesionActiva && tabsContainerRef.current) {
             const btnId = `tab-btn-${sesionActiva.id}`;
             const activeBtn = document.getElementById(btnId);
-            if (activeBtn) {
-                activeBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-            }
+            if (activeBtn) activeBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
         }
     }, [sesionActiva]); 
 
-    const handleAbrirModalCrear = (momento) => {
-        setMomentoSeleccionado(momento);
-        setShowModalRecurso(true);
-    };
+    // Handlers de Modales
+    const handleAbrirModalCrear = (momento) => { setMomentoSeleccionado(momento); setShowModalRecurso(true); };
+    const handleVisualizarRecurso = (recurso) => { setRecursoSeleccionado(recurso); setShowVerModal(true); };
+    const handleCerrarVisor = () => { setRecursoSeleccionado(null); setShowVerModal(false); };
+    const handleAbrirEdicion = (e) => { e.stopPropagation(); setShowEditarInfoModal(true); };
 
-    const handleVisualizarRecurso = (recurso) => {
-        setRecursoSeleccionado(recurso);
-        setShowVerModal(true);
-    };
-
-    const handleCerrarVisor = () => {
-        setRecursoSeleccionado(null);
-        setShowVerModal(false);
-    };
-
-    const handleAbrirEdicion = (e) => {
-        e.stopPropagation();
-        setShowEditarInfoModal(true);
-    };
-
+    // Componente Tarjeta de Recurso
     const RecursoCard = ({ recurso }) => {
         let icono = '📄';
         if (recurso.tipoArchivo === 'LINK') icono = '🔗';
@@ -151,13 +155,41 @@ export default function AulaVirtual() {
                 </div>
                 <div className="recurso-footer">
                     <span className="recurso-fecha">Publicado: {new Date().toLocaleDateString()}</span>
-                    <button 
-                        className="btn-ver" 
-                        onClick={() => handleVisualizarRecurso(recurso)}
-                    >
-                        Ver
-                    </button>
+                    <button className="btn-ver" onClick={() => handleVisualizarRecurso(recurso)}>Ver</button>
                 </div>
+            </div>
+        );
+    };
+
+    // ✅ Componente Visual para el Estado de Asistencia del Alumno
+    const MiAsistenciaBadge = () => {
+        if (!miAsistencia) return null;
+        
+        const estados = {
+            'PRESENTE': { text: 'Asististe', bg: '#e8f5e9', color: '#2e7d32', icon: '✅' },
+            'TARDE': { text: 'Llegada Tarde', bg: '#fff3e0', color: '#ef6c00', icon: '🕒' },
+            'FALTA_INJUSTIFICADA': { text: 'Falta', bg: '#ffebee', color: '#c62828', icon: '❌' },
+            'FALTA_JUSTIFICADA': { text: 'Justificada', bg: '#e3f2fd', color: '#1565c0', icon: '📄' },
+            'SIN_REGISTRAR': { text: 'Sin Registrar', bg: '#f5f5f5', color: '#757575', icon: '⚪' }
+        };
+
+        const estilo = estados[miAsistencia.estado] || estados['SIN_REGISTRAR'];
+
+        return (
+            <div style={{
+                backgroundColor: estilo.bg,
+                color: estilo.color,
+                padding: '6px 12px',
+                borderRadius: '20px',
+                fontWeight: 'bold',
+                fontSize: '0.9em',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '5px',
+                border: `1px solid ${estilo.color}40`
+            }}>
+                <span>{estilo.icon}</span>
+                <span>{estilo.text}</span>
             </div>
         );
     };
@@ -196,46 +228,44 @@ export default function AulaVirtual() {
             </div>
 
             <div className="sesion-header-card">
-                <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '10px'}}>
-                    <div>
-                        <div className="sesion-titulo-badge">
-                            Sesión {indexActiva}
-                        </div>
-                        <span style={{marginLeft: 15, color: '#555', fontWeight: 600, textTransform: 'capitalize'}}>
-                            📅 {formatearFecha(sesionActiva.fecha)}
-                        </span>
-                        {esHoy(sesionActiva.fecha) && (
-                            <span style={{marginLeft: 10, color: '#2e7d32', fontWeight: 'bold', backgroundColor: '#e8f5e9', padding: '2px 8px', borderRadius: '4px', fontSize: '0.8em'}}>
-                                📍 HOY
+                <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px', width: '100%'}}>
+                    <div style={{display: 'flex', flexDirection: 'column', gap: '5px'}}>
+                        <div style={{display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap'}}>
+                            <div className="sesion-titulo-badge">Sesión {indexActiva}</div>
+                            <span style={{color: '#555', fontWeight: 600, textTransform: 'capitalize'}}>
+                                📅 {formatearFecha(sesionActiva.fecha)}
                             </span>
-                        )}
+                            {esHoy(sesionActiva.fecha) && (
+                                <span style={{color: '#2e7d32', fontWeight: 'bold', backgroundColor: '#e8f5e9', padding: '2px 8px', borderRadius: '4px', fontSize: '0.8em'}}>
+                                    📍 HOY
+                                </span>
+                            )}
+                        </div>
                     </div>
                     
-                    {/* Botón Gestionar Asistencia Actualizado */}
-                    {userRole === 'PROFESOR' && (
-                        <button 
-                            className="btn-asistencia" 
-                            onClick={() => setShowAsistenciaModal(true)}
-                        >
-                            📋 Gestionar Asistencias
-                        </button>
-                    )}
+                    <div style={{display: 'flex', alignItems: 'center', gap: '10px'}}>
+                        {/* AQUI SE MUESTRA EL BADGE SI ES ALUMNO */}
+                        {userRole === 'ALUMNO' && <MiAsistenciaBadge />}
+
+                        {/* Botón Gestionar Asistencia (Solo Profesores) */}
+                        {userRole === 'PROFESOR' && (
+                            <button 
+                                className="btn-asistencia" 
+                                onClick={() => setShowAsistenciaModal(true)}
+                            >
+                                📋 Gestionar Asistencias
+                            </button>
+                        )}
+                    </div>
                 </div>
 
-                {/* --- ACORDEÓN TEMA --- */}
-                <div className="acordeon-item">
+                {/* --- ACORDEONES (Temática y Resultado) --- */}
+                <div className="acordeon-item" style={{marginTop: 15}}>
                     <div className="acordeon-header" onClick={() => setShowTematica(!showTematica)}>
                         <div style={{display: 'flex', alignItems: 'center', gap: '10px'}}>
                             <span>📄 Temática / Contenido</span>
                             {userRole === 'PROFESOR' && (
-                                <button 
-                                    className="btn-icon-edit"
-                                    onClick={handleAbrirEdicion}
-                                    title="Editar temática y resultado"
-                                    style={{border: 'none', background: 'transparent', cursor: 'pointer', fontSize: '1.2em'}}
-                                >
-                                    ✏️
-                                </button>
+                                <button className="btn-icon-edit" onClick={handleAbrirEdicion} title="Editar temática">✏️</button>
                             )}
                         </div>
                         <span>{showTematica ? '▲' : '▼'}</span>
@@ -247,7 +277,6 @@ export default function AulaVirtual() {
                     )}
                 </div>
 
-                {/* --- ACORDEÓN RESULTADO DE APRENDIZAJE --- */}
                 <div className="acordeon-item">
                     <div className="acordeon-header" onClick={() => setShowResultado(!showResultado)}>
                         <span>🎯 Resultado de aprendizaje</span>
@@ -261,38 +290,30 @@ export default function AulaVirtual() {
                 </div>
             </div>
 
+            {/* --- GRID DE RECURSOS --- */}
             <div className="fases-grid">
-                {/* COLUMNA 1: ANTES */}
                 <div className="fase-columna fase-antes">
                     <div className="fase-titulo"><span>⏮️</span> ANTES</div>
                     <p className="fase-desc">Preparación previa</p>
                     {recursosAntes.length === 0 && <div className="empty-recurso">Sin recursos previos</div>}
                     {recursosAntes.map(r => <RecursoCard key={r.id} recurso={r} />)}
-                    {userRole === 'PROFESOR' && (
-                        <button className="btn-add-recurso" onClick={() => handleAbrirModalCrear('ANTES')}>+</button>
-                    )}
+                    {userRole === 'PROFESOR' && <button className="btn-add-recurso" onClick={() => handleAbrirModalCrear('ANTES')}>+</button>}
                 </div>
 
-                {/* COLUMNA 2: DURANTE */}
                 <div className="fase-columna fase-durante">
                     <div className="fase-titulo"><span>🔥</span> DURANTE</div>
                     <p className="fase-desc">Material de clase</p>
                     {recursosDurante.length === 0 && <div className="empty-recurso">Sin material de clase</div>}
                     {recursosDurante.map(r => <RecursoCard key={r.id} recurso={r} />)}
-                    {userRole === 'PROFESOR' && (
-                        <button className="btn-add-recurso" onClick={() => handleAbrirModalCrear('DURANTE')}>+</button>
-                    )}
+                    {userRole === 'PROFESOR' && <button className="btn-add-recurso" onClick={() => handleAbrirModalCrear('DURANTE')}>+</button>}
                 </div>
 
-                {/* COLUMNA 3: DESPUÉS */}
                 <div className="fase-columna fase-despues">
                     <div className="fase-titulo"><span>⏭️</span> DESPUÉS</div>
                     <p className="fase-desc">Tareas y refuerzo</p>
                     {recursosDespues.length === 0 && <div className="empty-recurso">Sin tareas asignadas</div>}
                     {recursosDespues.map(r => <RecursoCard key={r.id} recurso={r} />)}
-                    {userRole === 'PROFESOR' && (
-                        <button className="btn-add-recurso" onClick={() => handleAbrirModalCrear('DESPUES')}>+</button>
-                    )}
+                    {userRole === 'PROFESOR' && <button className="btn-add-recurso" onClick={() => handleAbrirModalCrear('DESPUES')}>+</button>}
                 </div>
             </div>
 
@@ -307,11 +328,7 @@ export default function AulaVirtual() {
                 />
             )}
 
-            <VerRecursoModal 
-                isOpen={showVerModal}
-                onClose={handleCerrarVisor}
-                recurso={recursoSeleccionado}
-            />
+            <VerRecursoModal isOpen={showVerModal} onClose={handleCerrarVisor} recurso={recursoSeleccionado} />
 
             {sesionActiva && (
                 <EditarInfoSesionModal
@@ -322,18 +339,14 @@ export default function AulaVirtual() {
                 />
             )}
 
-            {/* Componente del Modal de Asistencia */}
             {sesionActiva && (
                 <GestionarAsistenciaModal
                     isOpen={showAsistenciaModal}
                     onClose={() => setShowAsistenciaModal(false)}
                     sesion={sesionActiva}
-                    onGuardar={() => {
-                        console.log("Asistencia guardada y modal cerrado");
-                    }}
+                    onGuardar={() => console.log("Asistencia guardada")}
                 />
             )}
-
         </div>
     );
 }

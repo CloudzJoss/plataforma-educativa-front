@@ -1,29 +1,66 @@
+/*//src/styles/HorarioSemanal.css*/
+/* src/styles/HorarioSemanal.css */
+
+/* --- VARIABLES DE MARCA --- */
+:root {
+    --brand-dark: #1c242c;
+    --brand-blue: #045c94;
+    --brand-yellow: #e4bc04;
+    --bg-light: #f4f6f8;
+    --white: #ffffff;
+    --border-color: #e0e0e0;
+}
+
 .horario-container {
     display: flex;
     flex-direction: column;
-    background: white;
-    border: 1px solid #e0e0e0;
-    border-radius: 8px;
+    background: var(--white);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
     overflow: hidden;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     max-width: 100%;
-    overflow-x: auto; /* Scroll horizontal en móviles */
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    margin-top: 20px;
+}
+
+/* Contenedor con scroll para móviles */
+.horario-scroll-wrapper {
+    overflow-x: auto; /* Habilita scroll horizontal si no cabe */
+    width: 100%;
+    -webkit-overflow-scrolling: touch; /* Scroll suave en iOS */
+}
+
+/* Ancho mínimo para que no se aplaste en móvil */
+.horario-grid-min-width {
+    min-width: 800px; /* Forzamos este ancho mínimo */
 }
 
 /* --- Cabecera (Días) --- */
 .horario-header {
     display: grid;
-    grid-template-columns: 60px repeat(6, 1fr); /* 60px para la hora, el resto para los 6 días */
-    border-bottom: 1px solid #e0e0e0;
-    background-color: #f9fafb;
+    grid-template-columns: 60px repeat(6, 1fr);
+    border-bottom: 2px solid var(--brand-blue); /* Línea de marca */
+    background-color: var(--brand-dark);
+    color: var(--white);
+    position: sticky;
+    top: 0;
+    z-index: 30;
+}
+
+.time-column-header {
+    background-color: var(--brand-dark);
+    border-right: 1px solid rgba(255,255,255,0.1);
 }
 
 .day-header {
-    padding: 10px;
+    padding: 12px 5px;
     text-align: center;
-    font-weight: bold;
-    color: #555;
-    border-left: 1px solid #e0e0e0;
+    font-weight: 700;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-left: 1px solid rgba(255,255,255,0.1);
 }
 
 /* --- Cuerpo (Grilla) --- */
@@ -31,37 +68,49 @@
     display: grid;
     grid-template-columns: 60px repeat(6, 1fr);
     position: relative;
-    /* Altura basada en horas: (22 - 7) horas * 60px/hora + padding */
+    /* Altura basada en horas: (22 - 7) horas * 60px/hora */
     height: 900px; 
     overflow-y: auto;
+    background-color: #fafafa;
 }
 
 /* Columna de Horas (Izquierda) */
 .time-column {
-    background-color: #fff;
-    border-right: 1px solid #e0e0e0;
+    background-color: var(--white);
+    border-right: 1px solid var(--border-color);
+    position: sticky;
+    left: 0;
+    z-index: 20; /* Para que quede fija al hacer scroll horizontal */
+    box-shadow: 2px 0 5px rgba(0,0,0,0.05);
 }
 
 .time-slot {
-    height: 60px; /* ⚠️ IMPORTANTE: Debe coincidir con el cálculo en JS */
+    height: 60px; /* ⚠️ IMPORTANTE: Coincidir con JS */
     position: relative;
     text-align: right;
     padding-right: 10px;
-    color: #888;
-    font-size: 0.8rem;
-    transform: translateY(-10px); /* Ajuste visual para alinear el texto con la línea */
+    color: var(--brand-blue);
+    font-size: 0.75rem;
+    font-weight: 700;
+    transform: translateY(-10px);
+}
+
+.time-slot span {
+    background: var(--white);
+    padding: 2px 4px;
+    border-radius: 4px;
 }
 
 /* Columnas de Días */
 .day-column {
     position: relative;
-    border-left: 1px solid #e0e0e0;
-    background-color: white;
+    border-left: 1px dashed #eee; /* Líneas verticales sutiles */
+    background-color: var(--white);
 }
 
 /* Líneas horizontales de fondo */
 .grid-cell {
-    height: 60px; /* ⚠️ IMPORTANTE: Debe coincidir */
+    height: 60px; /* ⚠️ IMPORTANTE: Coincidir con JS */
     border-bottom: 1px solid #f0f0f0;
     box-sizing: border-box;
 }
@@ -69,35 +118,79 @@
 /* --- Tarjetas de Eventos (Bloques de Clase) --- */
 .event-card {
     position: absolute;
-    width: 94%; /* Dejar un pequeño margen lateral */
-    left: 3%;
-    border-radius: 4px;
-    padding: 4px;
+    width: 90%; /* Margen lateral */
+    left: 5%;
+    border-radius: 6px;
+    padding: 6px;
     font-size: 0.75rem;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     overflow: hidden;
     cursor: pointer;
-    transition: transform 0.1s;
+    transition: all 0.2s ease;
     z-index: 10;
     box-sizing: border-box;
-    color: #333;
+    color: var(--brand-dark);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    border-left-width: 4px;
+    border-left-style: solid;
 }
 
 .event-card:hover {
-    transform: scale(1.02);
-    z-index: 20;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+    transform: scale(1.05);
+    z-index: 50; /* Superponer al hacer hover */
+    box-shadow: 0 8px 15px rgba(0,0,0,0.2);
 }
 
 .event-title {
-    font-weight: bold;
+    font-weight: 800;
+    font-size: 0.8rem;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     margin-bottom: 2px;
+    color: var(--brand-dark);
 }
 
-.event-info, .event-aula {
+.event-info {
     font-size: 0.7rem;
-    color: #555;
+    font-weight: 600;
+    opacity: 0.8;
+}
+
+.event-aula {
+    font-size: 0.7rem;
+    color: var(--brand-blue);
+    font-weight: 700;
+    margin-top: 2px;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+}
+
+/* --- ESTILOS RESPONSIVOS --- */
+
+/* Pantallas Medianas (Tablets) */
+@media (max-width: 900px) {
+    .day-header {
+        font-size: 0.8rem;
+        padding: 10px 2px;
+    }
+}
+
+/* Pantallas Pequeñas (Móviles) */
+@media (max-width: 600px) {
+    /* El contenedor ahora permite scroll */
+    .horario-container {
+        border-radius: 0; /* Quitar bordes redondeados para aprovechar espacio */
+        border-left: none;
+        border-right: none;
+    }
+    
+    /* La columna de hora se hace más pequeña */
+    .time-slot {
+        font-size: 0.7rem;
+        padding-right: 5px;
+    }
 }

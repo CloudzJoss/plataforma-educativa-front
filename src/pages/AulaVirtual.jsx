@@ -6,8 +6,8 @@ import axios from 'axios';
 // Componentes
 import CrearRecursoModal from '../components/CrearRecursoModal.jsx';
 import VerRecursoModal from '../components/VerRecursoModal.jsx';
-// ✅ IMPORTAMOS EL NUEVO MODAL
 import EditarInfoSesionModal from '../components/EditarInfoSesionModal.jsx';
+import GestionarAsistenciaModal from '../components/GestionarAsistenciaModal.jsx'; // ✅ IMPORTACIÓN NUEVA
 
 // Estilos
 import '../styles/AulaVirtual.css';
@@ -30,8 +30,11 @@ export default function AulaVirtual() {
     const [showVerModal, setShowVerModal] = useState(false);
     const [recursoSeleccionado, setRecursoSeleccionado] = useState(null);
 
-    // ✅ ESTADO PARA MODAL DE EDICIÓN DE INFO
+    // Estado para Modal de Edición de Info
     const [showEditarInfoModal, setShowEditarInfoModal] = useState(false);
+
+    // ✅ ESTADO PARA MODAL DE ASISTENCIA
+    const [showAsistenciaModal, setShowAsistenciaModal] = useState(false);
 
     const userRole = localStorage.getItem('userRole');
     const tabsContainerRef = useRef(null);
@@ -124,7 +127,6 @@ export default function AulaVirtual() {
         setShowVerModal(false);
     };
 
-    // ✅ MANEJADOR PARA ABRIR EDICIÓN (Evita propagación del click al acordeón)
     const handleAbrirEdicion = (e) => {
         e.stopPropagation();
         setShowEditarInfoModal(true);
@@ -209,10 +211,11 @@ export default function AulaVirtual() {
                         )}
                     </div>
                     
+                    {/* ✅ BOTÓN GESTIONAR ASISTENCIA ACTUALIZADO */}
                     {userRole === 'PROFESOR' && (
                         <button 
                             className="btn-asistencia" 
-                            onClick={() => alert("Funcionalidad de Asistencias pendiente")}
+                            onClick={() => setShowAsistenciaModal(true)}
                         >
                             📋 Gestionar Asistencias
                         </button>
@@ -224,7 +227,6 @@ export default function AulaVirtual() {
                     <div className="acordeon-header" onClick={() => setShowTematica(!showTematica)}>
                         <div style={{display: 'flex', alignItems: 'center', gap: '10px'}}>
                             <span>📄 Temática / Contenido</span>
-                            {/* BOTÓN EDITAR PARA EL PROFESOR */}
                             {userRole === 'PROFESOR' && (
                                 <button 
                                     className="btn-icon-edit"
@@ -253,7 +255,6 @@ export default function AulaVirtual() {
                     </div>
                     {showResultado && (
                         <div className="acordeon-content">
-                            {/* ✅ Usamos .resultado en lugar de .descripcion */}
                             {sesionActiva.resultado || <span style={{color: '#999', fontStyle: 'italic'}}>Sin resultado de aprendizaje definido.</span>}
                         </div>
                     )}
@@ -312,13 +313,25 @@ export default function AulaVirtual() {
                 recurso={recursoSeleccionado}
             />
 
-            {/* ✅ RENDERIZADO DEL MODAL DE EDICIÓN */}
             {sesionActiva && (
                 <EditarInfoSesionModal
                     isOpen={showEditarInfoModal}
                     onClose={() => setShowEditarInfoModal(false)}
                     sesion={sesionActiva}
                     onUpdate={fetchSesiones}
+                />
+            )}
+
+            {/* ✅ MODAL DE ASISTENCIA INTEGRADO */}
+            {sesionActiva && (
+                <GestionarAsistenciaModal
+                    isOpen={showAsistenciaModal}
+                    onClose={() => setShowAsistenciaModal(false)}
+                    sesion={sesionActiva}
+                    onGuardar={() => {
+                        // Puedes añadir lógica extra si necesitas refrescar algo al guardar
+                        console.log("Asistencia guardada y modal cerrado");
+                    }}
                 />
             )}
 

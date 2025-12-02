@@ -1,0 +1,125 @@
+/* src/styles/GestionarAsistenciaModal.css */
+.asistencia-modal-width {
+    max-width: 900px;
+    width: 95%;
+    height: 85vh; /* Alto fijo para permitir scroll interno */
+    display: flex;
+    flex-direction: column;
+}
+
+.modal-body {
+    flex: 1;
+    overflow-y: auto; /* Scroll solo en el cuerpo */
+    padding: 20px;
+    background-color: #f8f9fa;
+}
+
+.toolbar-asistencia {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.btn-small-outline {
+    padding: 6px 12px;
+    border: 1px solid #2e7d32;
+    color: #2e7d32;
+    background: white;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+.btn-small-outline:hover {
+    background: #e8f5e9;
+}
+
+.tabla-container {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    overflow: hidden;
+}
+
+.asistencia-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.asistencia-table th {
+    background: #f1f3f5;
+    padding: 12px;
+    text-align: left;
+    font-size: 0.9em;
+    color: #555;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.asistencia-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid #eee;
+    vertical-align: middle;
+}
+
+.student-name {
+    font-weight: 600;
+    color: #333;
+}
+.student-code {
+    font-size: 0.8em;
+    color: #888;
+}
+
+.radio-group {
+    display: flex;
+    gap: 5px;
+}
+
+/* Estilos de botones tipo 'Badge' seleccionables */
+.radio-label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 1px solid #ddd;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 0.85em;
+    color: #666;
+    background: white;
+    transition: all 0.2s;
+    user-select: none;
+}
+
+.radio-label input {
+    display: none;
+}
+
+/* Colores al seleccionar */
+.radio-label.presente.selected { background-color: #2e7d32; color: white; border-color: #2e7d32; }
+.radio-label.tarde.selected { background-color: #f57c00; color: white; border-color: #f57c00; }
+.radio-label.falta_injustificada.selected { background-color: #c62828; color: white; border-color: #c62828; }
+.radio-label.falta_justificada.selected { background-color: #1565c0; color: white; border-color: #1565c0; }
+
+.obs-input {
+    width: 100%;
+    padding: 6px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 0.9em;
+}
+
+.row-pending {
+    background-color: #fff8e1; /* Fondo amarillento si no se ha registrado */
+}
+
+.loading-state, .error-state {
+    text-align: center;
+    padding: 40px;
+    color: #666;
+}

@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react'; // ✅ 1. Importar useCallback
 import axios from 'axios';
-import '../styles/GestionUsuarios.css'; // Reutilizamos estilos
+import '../styles/GestionUsuarios.css'; 
 
 const BASE_URL = 'https://plataforma-edu-back-gpcsh9h7fddkfvfb.chilecentral-01.azurewebsites.net';
 
@@ -9,19 +9,12 @@ export default function VerAlumnosModal({ isOpen, onClose, seccion }) {
     const [loading, setLoading] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
 
-    useEffect(() => {
-        if (isOpen && seccion) {
-            cargarAlumnos();
-        } else {
-            setAlumnos([]);
-            setSearchTerm('');
-        }
-    }, [isOpen, seccion]);
+    // ✅ 2. Envolver la función en useCallback
+    const cargarAlumnos = useCallback(async () => {
+        if (!seccion) return; // Validación de seguridad
 
-    const cargarAlumnos = async () => {
         setLoading(true);
         try {
-            // Usamos el endpoint existente en MatriculaController
             const response = await axios.get(
                 `${BASE_URL}/api/matriculas/seccion/${seccion.id}/alumnos`, 
                 { withCredentials: true }
@@ -33,9 +26,19 @@ export default function VerAlumnosModal({ isOpen, onClose, seccion }) {
         } finally {
             setLoading(false);
         }
-    };
+    }, [seccion]); // Dependencia: Solo se recrea si cambia la 'seccion'
 
-    // Filtro Frontend (por nombre o código de estudiante)
+    // ✅ 3. Agregar cargarAlumnos a las dependencias del useEffect
+    useEffect(() => {
+        if (isOpen && seccion) {
+            cargarAlumnos();
+        } else {
+            setAlumnos([]);
+            setSearchTerm('');
+        }
+    }, [isOpen, seccion, cargarAlumnos]);
+
+    // Filtro Frontend
     const alumnosFiltrados = alumnos.filter(m => 
         m.nombreAlumno.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (m.codigoEstudiante && m.codigoEstudiante.toLowerCase().includes(searchTerm.toLowerCase()))

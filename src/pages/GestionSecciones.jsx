@@ -1,9 +1,9 @@
 // src/pages/GestionSecciones.jsx
-// src/pages/GestionSecciones.jsx
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import CreateSeccionModal from '../components/CreateSeccionModal';
 import EditSeccionModal from '../components/EditSeccionModal';
+import VerAlumnosModal from '../components/VerAlumnosModal';
 import '../styles/GestionUsuarios.css'; 
 
 const BASE_URL = 'https://plataforma-edu-back-gpcsh9h7fddkfvfb.chilecentral-01.azurewebsites.net';
@@ -16,6 +16,10 @@ export default function GestionSecciones() {
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
     const [seccionToEdit, setSeccionToEdit] = useState(null);
+
+    // ✅ ESTADOS PARA EL MODAL DE ALUMNOS
+    const [showAlumnosModal, setShowAlumnosModal] = useState(false);
+    const [seccionParaVerAlumnos, setSeccionParaVerAlumnos] = useState(null);
 
     const [filtroNivel, setFiltroNivel] = useState('TODOS');
     const [filtroGrado, setFiltroGrado] = useState('TODOS');
@@ -116,6 +120,12 @@ export default function GestionSecciones() {
             console.error('❌ Error:', errorMsg);
             alert(errorMsg);
         }
+    };
+
+    // ✅ HANDLER PARA ABRIR MODAL ALUMNOS
+    const handleVerAlumnos = (seccion) => {
+        setSeccionParaVerAlumnos(seccion);
+        setShowAlumnosModal(true);
     };
 
     // Helper para formatear la hora (14:00:00 -> 14:00)
@@ -318,6 +328,16 @@ export default function GestionSecciones() {
 
                                     <td>
                                         <div style={{ display: 'flex', gap: '5px', justifyContent: 'center' }}>
+                                            {/* ✅ BOTÓN NUEVO: VER ALUMNOS */}
+                                            <button 
+                                                onClick={() => handleVerAlumnos(seccion)}
+                                                className="btn-info"
+                                                title="Ver lista de estudiantes"
+                                                style={{ backgroundColor: '#0288d1', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', padding: '5px 8px' }}
+                                            >
+                                                👥
+                                            </button>
+
                                             <button 
                                                 onClick={() => handleEdit(seccion)} 
                                                 className="btn-edit"
@@ -364,6 +384,13 @@ export default function GestionSecciones() {
                 }} 
                 seccionToEdit={seccionToEdit} 
                 onSeccionUpdated={handleSeccionUpdated} 
+            />
+
+            {/* ✅ RENDERIZAR NUEVO MODAL DE ALUMNOS */}
+            <VerAlumnosModal 
+                isOpen={showAlumnosModal} 
+                onClose={() => setShowAlumnosModal(false)} 
+                seccion={seccionParaVerAlumnos} 
             />
         </div>
     );

@@ -48,7 +48,7 @@ export default function Header() {
         {/* Menú deslizable */}
         <div className={`nav-links-wrapper ${menuOpen ? 'open' : ''}`}>
           <div className="nav-links">
-            <a className="other-page" href="#nosotros" onClick={handleLinkClick}>Nosotros</a>
+            <a className="other-page" href="#nosotros" onClick={handleLinkClick}>Noso tros</a>
             <a className="other-page" href="#programas" onClick={handleLinkClick}>Programas</a>
             <a className="other-page" href="#contactanos" onClick={handleLinkClick}>Contáctanos</a>
           </div>

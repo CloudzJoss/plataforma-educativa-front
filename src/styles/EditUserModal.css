@@ -302,7 +302,7 @@ Estilos profesionales para CreateUserModal y EditUserModal */
 
 /* Estados de validación */
 .auth-form input:invalid:not(:placeholder-shown) {
-  border-color: #fca5a5;
+  border-color: #2563eb;
 }
 
 .auth-form input:valid:not(:placeholder-shown) {

@@ -1,17 +1,22 @@
 // src/components/login/LoginModal.jsx
 import React, { useEffect, useRef, useState } from "react";
-import axios from 'axios'; 
+import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+
+import icon from "../../assets/logo.png";
+
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
 
 export default function LoginModal({ onClose }) {
   const usernameRef = useRef(null);
   const navigate = useNavigate();
 
-  const [email, setEmail] = useState(""); 
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [showPassword, setShowPassword] = useState(false); 
+  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     usernameRef.current?.focus();
@@ -23,12 +28,12 @@ export default function LoginModal({ onClose }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true); 
-    setError(null);    
+    setLoading(true);
+    setError(null);
 
     // 🚨 CAMBIO: URL DEL BACKEND EN AZURE
     const url = "https://plataforma-edu-back-gpcsh9h7fddkfvfb.chilecentral-01.azurewebsites.net/api/auth/login";
-    
+
     const payload = {
       email: email,
       password: password,
@@ -37,21 +42,21 @@ export default function LoginModal({ onClose }) {
     try {
       // Importante: withCredentials: true permite que la cookie viaje
       const response = await axios.post(url, payload, { withCredentials: true });
-      
+
       const { nombre, rol } = response.data;
-      
+
       localStorage.setItem("userName", nombre);
       localStorage.setItem("userRole", rol);
 
-      console.log("Login exitoso:", response.data); 
+      console.log("Login exitoso:", response.data);
       setLoading(false);
-      
-      onClose(); 
-      
+
+      onClose();
+
       setTimeout(() => {
         navigate('/dashboard');
         window.location.reload();
-      }, 0); 
+      }, 0);
 
     } catch (err) {
       console.error("Error en el login:", err);
@@ -69,38 +74,52 @@ export default function LoginModal({ onClose }) {
 
   return (
     <>
-      <h2 id="login-title" className="modal-title">Iniciar sesión</h2>
+      <div className="head-modal" style={{
+        margin: "30px 0",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        gap: "20px",
+      }}>
+        <img className="icon-modal" src={icon} alt="Logo de la Escuela" style={{
+          width: "250px",
+        }} />
+        <h2 id="login-title" className="modal-title">Iniciar sesión</h2>
+      </div>
 
       <form className="auth-form" onSubmit={handleSubmit} noValidate>
         <label>
           Email
           <input
             ref={usernameRef}
-            type="email" 
+            type="email"
             name="email"
-            value={email} 
+            value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
           />
         </label>
 
-        <label className="password-container"> 
+        <label className="password-container">
           Contraseña
-          <div style={{ position: 'relative' }}> 
+          <div style={{ position: 'relative' }}>
             <input
               type={showPassword ? "text" : "password"}
               name="password"
-              value={password} 
+              value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
             />
             <button
-              type="button" 
+              type="button"
               onClick={togglePasswordVisibility}
               className="password-toggle-btn"
               aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
             >
-              {showPassword ? '🙈' : '👁️'}
+              <FontAwesomeIcon icon={showPassword ? faEyeSlash : faEye} className="icon-see" style={{
+                fontSize: '15px',
+                color: '#3E6FA3'
+              }} />
             </button>
           </div>
         </label>

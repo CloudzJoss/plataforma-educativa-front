@@ -6,7 +6,7 @@ export default function DashboardAdmin() {
     <>
       <h1>Panel de Administración</h1>
       <h2>¡Bienvenido, {userName}!</h2>
-      <p>
+      <p>a
         Selecciona una opción del menú (☰) para comenzar a gestionar
         la plataforma.
       </p>

@@ -1,5 +1,5 @@
 // src/pages/SupervisorAsistencia.jsx
-import React, { useState, useCallback } from 'react';
+import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import '../styles/SupervisorAsistencia.css'; // ✅ RUTA CORREGIDA

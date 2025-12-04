@@ -1,4 +1,3 @@
-// src/components/Sidebar.jsx
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
@@ -58,41 +57,31 @@ export default function Sidebar({ isOpen, onClose }) {
                 {/* Enlaces de ADMINISTRADOR */}
                 {userRole === 'ADMINISTRADOR' && (
                     <>
-                        <Link to="/dashboard/usuarios" onClick={onClose}>👥 Gestión de Usuarios</Link>
-                        <Link to="/dashboard/cursos" onClick={onClose}>📚 Gestión de Cursos</Link>
-                        <Link to="/dashboard/secciones" onClick={onClose}>🏫 Gestión de Secciones</Link>
-                        <Link to="/dashboard/matriculas" onClick={onClose}>📋 Gestión de Matrículas</Link>
+                        <div className="menu-section-label">Gestión</div>
+                        <Link to="/dashboard/usuarios" onClick={onClose}>👥 Usuarios</Link>
+                        <Link to="/dashboard/cursos" onClick={onClose}>📚 Cursos</Link>
+                        <Link to="/dashboard/secciones" onClick={onClose}>🏫 Secciones</Link>
+                        <Link to="/dashboard/matriculas" onClick={onClose}>📋 Matrículas</Link>
+                        
+                        <div className="menu-section-label">Supervisión</div>
+                        <Link to="/dashboard/supervisor-asistencia" onClick={onClose}>🕵️‍♂️ Supervisar Clases</Link>
                     </>
                 )}
 
                 {/* Enlaces de PROFESOR */}
                 {userRole === 'PROFESOR' && (
                     <>
-                        {/* 👇 NUEVO BOTÓN PARA PROFESOR */}
-                        <Link to="/dashboard/mi-horario" onClick={onClose}>
-                            📅 Ver Horario
-                        </Link>
-
-                        <Link to="/dashboard/mis-secciones" onClick={onClose}>
-                            📖 Mis Secciones
-                        </Link>
+                        <Link to="/dashboard/mi-horario" onClick={onClose}>📅 Ver Horario</Link>
+                        <Link to="/dashboard/mis-secciones" onClick={onClose}>📖 Mis Secciones</Link>
                     </>
                 )}
 
                 {/* Enlaces de ALUMNO */}
                 {userRole === 'ALUMNO' && (
                     <>
-                        {/* 👇 NUEVO BOTÓN PARA ALUMNO */}
-                        <Link to="/dashboard/mi-horario" onClick={onClose}>
-                            📅 Mi Horario Visual
-                        </Link>
-
-                        <Link to="/dashboard/mis-matriculas" onClick={onClose}>
-                            📚 Mis Cursos
-                        </Link>
-                        <Link to="/dashboard/secciones-disponibles" onClick={onClose}>
-                            🔍 Buscar Secciones
-                        </Link>
+                        <Link to="/dashboard/mi-horario" onClick={onClose}>📅 Mi Horario</Link>
+                        <Link to="/dashboard/mis-matriculas" onClick={onClose}>📚 Mis Cursos</Link>
+                        <Link to="/dashboard/secciones-disponibles" onClick={onClose}>🔍 Buscar Secciones</Link>
                     </>
                 )}
 

@@ -7,112 +7,126 @@ import Dashboard from "./pages/Dashboard.jsx";
 import GestionUsuarios from "./pages/GestionUsuarios.jsx";
 import GestionCursos from "./pages/GestionCursos.jsx";
 import GestionSecciones from "./pages/GestionSecciones.jsx";
-import GestionMatriculas from "./pages/GestionMatriculas.jsx"; // ✅ IMPORTAR NUEVA PÁGINA
+import GestionMatriculas from "./pages/GestionMatriculas.jsx";
+import SupervisorAsistencia from "./pages/SupervisorAsistencia.jsx";
 import MisSeccionesProfesor from "./pages/MisSeccionesProfesor.jsx";
 import MisMatriculas from "./pages/MisMatriculas.jsx";
 import SeccionesDisponibles from "./pages/SeccionesDisponibles.jsx";
 import VerHorario from "./pages/VerHorario.jsx";
 import ProtectedRoute from "./security/ProtectedRoute.jsx";
 import DashboardHomeRouter from "./pages/DashboardHomeRouter.jsx";
-import AulaVirtual from "./pages/AulaVirtual.jsx"; 
+import AulaVirtual from "./pages/AulaVirtual.jsx";
 
 const routeConfig = [
-    {
-        path: "/",
-        element: <HomePage />
-    },
-    {
-        path: "/dashboard",
+  {
+    path: "/",
+    element: <HomePage />,
+  },
+  {
+    path: "/dashboard",
+    element: (
+      <ProtectedRoute>
+        <Dashboard />
+      </ProtectedRoute>
+    ),
+    children: [
+      // --- HOME ---
+      {
+        index: true,
+        element: <DashboardHomeRouter />,
+      },
+
+      // --- AULA VIRTUAL ---
+      {
+        path: "aula/:seccionId",
         element: (
-            <ProtectedRoute>
-                <Dashboard />
-            </ProtectedRoute>
+          <ProtectedRoute roles={["ALUMNO", "PROFESOR", "ADMINISTRADOR"]}>
+            <AulaVirtual />
+          </ProtectedRoute>
         ),
-        children: [
-            {
-                index: true,
-                element: <DashboardHomeRouter />
-            },
-            // --- RUTA DE AULA VIRTUAL (Dinámica) ---
-            {
-                path: "aula/:seccionId", // 🔑 RUTA CLAVE
-                element: (
-                    <ProtectedRoute roles={["ALUMNO", "PROFESOR"]}>
-                        <AulaVirtual />
-                    </ProtectedRoute>
-                )
-            },
-            // --- RUTAS COMUNES (Alumno y Profesor) ---
-            {
-                path: "mi-horario",
-                element: (
-                    <ProtectedRoute roles={["ALUMNO", "PROFESOR"]}>
-                        <VerHorario />
-                    </ProtectedRoute>
-                )
-            },
-            // --- RUTAS DE ADMINISTRADOR ---
-            {
-                path: "usuarios",
-                element: (
-                    <ProtectedRoute roles={["ADMINISTRADOR"]}>
-                        <GestionUsuarios />
-                    </ProtectedRoute>
-                )
-            },
-            {
-                path: "cursos",
-                element: (
-                    <ProtectedRoute roles={["ADMINISTRADOR"]}>
-                        <GestionCursos />
-                    </ProtectedRoute>
-                )
-            },
-            {
-                path: "secciones",
-                element: (
-                    <ProtectedRoute roles={["ADMINISTRADOR"]}>
-                        <GestionSecciones />
-                    </ProtectedRoute>
-                )
-            },
-            // ✅ NUEVA RUTA PARA GESTIÓN DE MATRÍCULAS (ADMIN)
-            {
-                path: "matriculas",
-                element: (
-                    <ProtectedRoute roles={["ADMINISTRADOR"]}>
-                        <GestionMatriculas />
-                    </ProtectedRoute>
-                )
-            },
-            // --- RUTAS DE PROFESOR ---
-            {
-                path: "mis-secciones",
-                element: (
-                    <ProtectedRoute roles={["PROFESOR"]}>
-                        <MisSeccionesProfesor />
-                    </ProtectedRoute>
-                )
-            },
-            // --- RUTAS DE ALUMNO ---
-            {
-                path: "mis-matriculas",
-                element: (
-                    <ProtectedRoute roles={["ALUMNO"]}>
-                        <MisMatriculas />
-                    </ProtectedRoute>
-                )
-            },
-            {
-                path: "secciones-disponibles",
-                element: (
-                    <ProtectedRoute roles={["ALUMNO"]}>
-                        <SeccionesDisponibles />
-                    </ProtectedRoute>
-                )
-            }
-        ]
-    },
+      },
+
+      // --- RUTAS COMUNES ---
+      {
+        path: "mi-horario",
+        element: (
+          <ProtectedRoute roles={["ALUMNO", "PROFESOR"]}>
+            <VerHorario />
+          </ProtectedRoute>
+        ),
+      },
+
+      // --- ADMINISTRADOR ---
+      {
+        path: "usuarios",
+        element: (
+          <ProtectedRoute roles={["ADMINISTRADOR"]}>
+            <GestionUsuarios />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "cursos",
+        element: (
+          <ProtectedRoute roles={["ADMINISTRADOR"]}>
+            <GestionCursos />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "secciones",
+        element: (
+          <ProtectedRoute roles={["ADMINISTRADOR"]}>
+            <GestionSecciones />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "matriculas",
+        element: (
+          <ProtectedRoute roles={["ADMINISTRADOR"]}>
+            <GestionMatriculas />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "supervisor-asistencia",
+        element: (
+          <ProtectedRoute roles={["ADMINISTRADOR"]}>
+            <SupervisorAsistencia />
+          </ProtectedRoute>
+        ),
+      },
+
+      // --- PROFESOR ---
+      {
+        path: "mis-secciones",
+        element: (
+          <ProtectedRoute roles={["PROFESOR"]}>
+            <MisSeccionesProfesor />
+          </ProtectedRoute>
+        ),
+      },
+
+      // --- ALUMNO ---
+      {
+        path: "mis-matriculas",
+        element: (
+          <ProtectedRoute roles={["ALUMNO"]}>
+            <MisMatriculas />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "secciones-disponibles",
+        element: (
+          <ProtectedRoute roles={["ALUMNO"]}>
+            <SeccionesDisponibles />
+          </ProtectedRoute>
+        ),
+      },
+    ],
+  },
 ];
 
 export default routeConfig;

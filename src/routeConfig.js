@@ -7,6 +7,7 @@ import Dashboard from "./pages/Dashboard.jsx";
 import GestionUsuarios from "./pages/GestionUsuarios.jsx";
 import GestionCursos from "./pages/GestionCursos.jsx";
 import GestionSecciones from "./pages/GestionSecciones.jsx";
+import GestionMatriculas from "./pages/GestionMatriculas.jsx"; // ✅ IMPORTAR NUEVA PÁGINA
 import MisSeccionesProfesor from "./pages/MisSeccionesProfesor.jsx";
 import MisMatriculas from "./pages/MisMatriculas.jsx";
 import SeccionesDisponibles from "./pages/SeccionesDisponibles.jsx";
@@ -72,6 +73,15 @@ const routeConfig = [
                 element: (
                     <ProtectedRoute roles={["ADMINISTRADOR"]}>
                         <GestionSecciones />
+                    </ProtectedRoute>
+                )
+            },
+            // ✅ NUEVA RUTA PARA GESTIÓN DE MATRÍCULAS (ADMIN)
+            {
+                path: "matriculas",
+                element: (
+                    <ProtectedRoute roles={["ADMINISTRADOR"]}>
+                        <GestionMatriculas />
                     </ProtectedRoute>
                 )
             },

@@ -101,7 +101,7 @@ export default function CreateCursoModal({ isOpen, onClose, onCursoCreated }) {
     };
 
     return (
-        <div className="modal-overlay" onClick={(e) => e.currentTarget === e.target && onClose()}>
+        <div className="modal-overlay" onClick={(e) => e.currentTarget === e.target}>
             <div className="modal fixed-modal" role="dialog" aria-modal="true" aria-labelledby="create-curso-title">
                 <button className="modal-close" onClick={onClose} aria-label="Cerrar">×</button>
                 <div className="modal-body">

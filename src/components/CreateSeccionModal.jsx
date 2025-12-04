@@ -15,7 +15,7 @@ export default function CreateSeccionModal({ isOpen, onClose, onSeccionCreated }
 
     // 🕒 ESTADO PARA HORARIOS MÚLTIPLES
     const [horarios, setHorarios] = useState([]);
-   
+
     // Estados temporales para agregar un horario
     const [tempDia, setTempDia] = useState('MONDAY');
     const [tempInicio, setTempInicio] = useState('');
@@ -112,7 +112,7 @@ export default function CreateSeccionModal({ isOpen, onClose, onSeccionCreated }
 
     // --- Lógica de Filtrado ---
     const cursosFiltrados = cursos.filter(curso => (curso.nivelDestino || curso.nivel) === nivelSeccion);
-    
+
     const obtenerOpcionesGrado = () => {
         switch (nivelSeccion) {
             case 'INICIAL': return ['1', '2', '3'];
@@ -165,8 +165,8 @@ export default function CreateSeccionModal({ isOpen, onClose, onSeccionCreated }
 
             // Verificamos palabras clave comunes en errores de cruce de horario
             if (
-                msg.toLowerCase().includes('profesor') || 
-                msg.toLowerCase().includes('horario') || 
+                msg.toLowerCase().includes('profesor') ||
+                msg.toLowerCase().includes('horario') ||
                 msg.toLowerCase().includes('cruce') ||
                 msg.toLowerCase().includes('conflict') ||
                 msg.toLowerCase().includes('overlap')
@@ -181,7 +181,7 @@ export default function CreateSeccionModal({ isOpen, onClose, onSeccionCreated }
     };
 
     return (
-        <div className="modal-overlay" onClick={(e) => e.currentTarget === e.target && onClose()}>
+        <div className="modal-overlay" onClick={(e) => e.currentTarget === e.target}>
             <div className="modal fixed-modal" style={{ maxWidth: '600px' }}>
                 <button className="modal-close" onClick={onClose}>×</button>
                 <div className="modal-body">
@@ -215,7 +215,7 @@ export default function CreateSeccionModal({ isOpen, onClose, onSeccionCreated }
 
                         <div style={{ marginTop: '15px', padding: '10px', backgroundColor: '#f9f9f9', borderRadius: '4px', border: '1px solid #eee' }}>
                             <h4 style={{ margin: '0 0 10px 0', fontSize: '0.9em' }}>🕒 Horarios Semanales</h4>
-                            
+
                             <div style={{ display: 'flex', gap: '5px', marginBottom: '10px' }}>
                                 <select value={tempDia} onChange={(e) => setTempDia(e.target.value)} style={{ flex: 2 }}>
                                     <option value="MONDAY">Lunes</option>
@@ -250,20 +250,20 @@ export default function CreateSeccionModal({ isOpen, onClose, onSeccionCreated }
                         </div>
 
                         <label style={{ marginTop: '15px' }}> Curso* <select value={cursoId} onChange={(e) => setCursoId(e.target.value)} required disabled={loadingCursos}>
-                                <option value="">Selecciona un curso</option>
-                                {cursosFiltrados.map((curso) => <option key={curso.id} value={curso.id}>{curso.codigo} - {curso.titulo}</option>)}
-                            </select>
+                            <option value="">Selecciona un curso</option>
+                            {cursosFiltrados.map((curso) => <option key={curso.id} value={curso.id}>{curso.codigo} - {curso.titulo}</option>)}
+                        </select>
                         </label>
 
                         <label> DNI Profesor* <input type="text" value={profesorDni} onChange={(e) => setProfesorDni(e.target.value)} required /> </label>
 
                         {/* 🛑 AQUI SE MUESTRA EL ERROR CLARO */}
                         {error && (
-                            <div className="auth-error" style={{ 
-                                color: '#d32f2f', 
-                                marginTop: '15px', 
-                                padding: '10px', 
-                                backgroundColor: '#ffebee', 
+                            <div className="auth-error" style={{
+                                color: '#d32f2f',
+                                marginTop: '15px',
+                                padding: '10px',
+                                backgroundColor: '#ffebee',
                                 borderRadius: '4px',
                                 border: '1px solid #ffcdd2',
                                 fontWeight: 'bold',

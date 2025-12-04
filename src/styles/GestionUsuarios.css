@@ -553,6 +553,36 @@
     margin: 0 auto 15px;
 }
 
+.nivel-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    background-color: #eceff1;
+    color: var(--brand-dark);
+}
+
+/* Variantes opcionales por nivel (ajusta a tus valores reales) */
+.nivel-inicial {
+    background-color: #e3f2fd;
+    color: #1565c0;
+}
+
+.nivel-intermedio {
+    background-color: #fff3e0;
+    color: #e65100;
+}
+
+.nivel-avanzado {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+}
+
 @keyframes spin {
     to {
         transform: rotate(360deg);

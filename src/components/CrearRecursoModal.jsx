@@ -89,7 +89,7 @@ export default function CrearRecursoModal({ isOpen, onClose, sesionId, momentoIn
     };
 
     return (
-        <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
+        <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget}>
             <div className="modal fixed-modal" style={{ maxWidth: '600px' }}>
                 {/* Botón X superior derecho */}
                 <button className="modal-close" onClick={onClose}>×</button>

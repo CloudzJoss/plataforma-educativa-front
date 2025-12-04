@@ -132,7 +132,7 @@ export default function CreateUserModal({ isOpen, onClose, onUserCreated }) {
   };
 
   return (
-    <div className="modal-overlay" onClick={(e) => e.currentTarget === e.target && onClose()}>
+    <div className="modal-overlay" onClick={(e) => e.currentTarget === e.target}>
       <div className="modal fixed-modal" role="dialog" aria-modal="true">
         <button className="modal-close" onClick={onClose}>×</button>
         <div className="modal-body">

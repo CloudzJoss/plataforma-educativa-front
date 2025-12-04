@@ -4,10 +4,14 @@
    1. VARIABLES GLOBALES Y CONFIGURACIÓN
    ========================================= */
 :root {
-    --brand-dark: #1c242c;   /* Cabeceras, Texto principal */
-    --brand-blue: #045c94;   /* Botones primarios, Acentos */
-    --brand-yellow: #e4bc04; /* Hover, Badges, Destacados */
-    --bg-light: #f4f6f8;     /* Fondo de página */
+    --brand-dark: #1c242c;
+    /* Cabeceras, Texto principal */
+    --brand-blue: #045c94;
+    /* Botones primarios, Acentos */
+    --brand-yellow: #e4bc04;
+    /* Hover, Badges, Destacados */
+    --bg-light: #f4f6f8;
+    /* Fondo de página */
     --white: #ffffff;
     --text-grey: #546e7a;
     --danger: #d32f2f;
@@ -25,6 +29,10 @@
     color: var(--brand-dark);
 }
 
+.gestion-usuarios-container .title-gestion {
+    background: #045c94;
+}
+
 /* =========================================
    2. ESTILOS DE GESTIÓN DE USUARIOS (Legacy Modernizado)
    ========================================= */
@@ -38,7 +46,7 @@
     letter-spacing: -0.5px;
 }
 
-.gestion-usuarios-container > p {
+.gestion-usuarios-container>p {
     font-size: 1rem;
     color: var(--text-grey);
     margin: 0 0 25px 0;
@@ -50,7 +58,8 @@
     color: var(--white);
     border: none;
     padding: 12px 25px;
-    border-radius: 50px; /* Estilo redondeado moderno */
+    border-radius: 50px;
+    /* Estilo redondeado moderno */
     font-size: 1rem;
     font-weight: 700;
     cursor: pointer;
@@ -63,7 +72,8 @@
 }
 
 .btn-create:hover {
-    background-color: #034068; /* Azul más oscuro */
+    background-color: #034068;
+    /* Azul más oscuro */
     transform: translateY(-2px);
     box-shadow: 0 6px 20px rgba(4, 92, 148, 0.4);
 }
@@ -82,7 +92,7 @@
     display: flex;
     align-items: center;
     gap: 10px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
 }
 
 .status-message.error {
@@ -108,21 +118,21 @@
 .table-container {
     background: var(--white);
     border-radius: 12px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
     border: 1px solid var(--border);
     overflow: hidden;
-    overflow-x: auto; /* Scroll horizontal responsivo */
+    overflow-x: auto;
 }
 
 .styled-table {
     width: 100%;
-    border-collapse: collapse; /* Preferimos collapse para diseño limpio */
+    border-collapse: collapse;
     background: var(--white);
-    min-width: 800px; /* Asegura ancho mínimo en móviles */
+    min-width: 800px;
 }
 
 .styled-table thead {
-    background-color: var(--brand-dark);
+    background: linear-gradient(90deg, var(--brand-dark), #02263f);
 }
 
 .styled-table thead th {
@@ -142,7 +152,8 @@
 }
 
 .styled-table tbody tr:hover {
-    background-color: #f8fbff; /* Azul muy suave al hover */
+    background-color: #f8fbff;
+    /* Azul muy suave al hover */
 }
 
 .styled-table tbody tr:last-child {
@@ -165,7 +176,8 @@
     border-right: 1px solid #f0f0f0;
 }
 
-.styled-table tbody td:nth-child(3) { /* Email */
+.styled-table tbody td:nth-child(3) {
+    /* Email */
     color: var(--text-grey);
 }
 
@@ -181,11 +193,40 @@
 }
 
 .styled-table tbody tr[data-rol="PROFESOR"] td:nth-child(4) {
-    color: #7b1fa2; /* Morado distinguido */
+    color: #7b1fa2;
+    /* Morado distinguido */
 }
 
 .styled-table tbody tr[data-rol="ADMINISTRADOR"] td:nth-child(4) {
     color: var(--danger);
+}
+
+.role-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Variantes por rol */
+.role-alumno {
+    background-color: #e3f2fd;
+    color: #1565c0;
+}
+
+.role-profesor {
+    background-color: #fff3e0;
+    color: #e65100;
+}
+
+.role-administrador {
+    background-color: #e8f5e9;
+    color: #2e7d32;
 }
 
 /* Botones de Acción (Usuarios) */
@@ -257,7 +298,7 @@
     margin-bottom: 30px;
     box-shadow: 0 4px 20px rgba(4, 92, 148, 0.08);
     border-left: 6px solid var(--brand-blue);
-    flex-wrap: wrap; 
+    flex-wrap: wrap;
     gap: 20px;
 }
 
@@ -301,7 +342,7 @@
     padding: 20px;
     border-radius: 12px;
     margin-bottom: 25px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
     border: 1px solid var(--border);
 }
 
@@ -338,16 +379,16 @@
 .table-responsive-wrapper {
     background: var(--white);
     border-radius: 12px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
     border: 1px solid var(--border);
     overflow: hidden;
-    overflow-x: auto; 
+    overflow-x: auto;
 }
 
 .modern-table {
     width: 100%;
     border-collapse: collapse;
-    min-width: 1000px; 
+    min-width: 1000px;
 }
 
 .modern-table thead {
@@ -388,9 +429,15 @@
     border: 1px solid #cfd8dc;
 }
 
-.fw-bold { font-weight: 700; color: var(--brand-dark); }
+.fw-bold {
+    font-weight: 700;
+    color: var(--brand-dark);
+}
 
-.cell-content { display: flex; flex-direction: column; }
+.cell-content {
+    display: flex;
+    flex-direction: column;
+}
 
 .sub-text {
     font-size: 0.8rem;
@@ -398,7 +445,11 @@
     margin-top: 2px;
 }
 
-.text-muted { color: #999; font-size: 0.85rem; font-style: italic; }
+.text-muted {
+    color: #999;
+    font-size: 0.85rem;
+    font-style: italic;
+}
 
 .horarios-list {
     list-style: none;
@@ -406,7 +457,10 @@
     margin: 0;
     font-size: 0.85rem;
 }
-.horarios-list li { margin-bottom: 3px; }
+
+.horarios-list li {
+    margin-bottom: 3px;
+}
 
 /* Status & Actions */
 .status-pill {
@@ -416,10 +470,22 @@
     font-weight: 800;
     text-transform: uppercase;
 }
-.status-pill.active { background-color: #e3f2fd; color: var(--brand-blue); }
-.status-pill.inactive { background-color: #fafafa; color: var(--text-grey); border: 1px solid #ddd; }
 
-.actions-cell { display: flex; gap: 8px; }
+.status-pill.active {
+    background-color: #e3f2fd;
+    color: var(--brand-blue);
+}
+
+.status-pill.inactive {
+    background-color: #fafafa;
+    color: var(--text-grey);
+    border: 1px solid #ddd;
+}
+
+.actions-cell {
+    display: flex;
+    gap: 8px;
+}
 
 .btn-icon {
     width: 32px;
@@ -434,17 +500,47 @@
     background: transparent;
     font-size: 1rem;
 }
-.btn-icon:hover { background-color: #f0f0f0; transform: scale(1.1); }
-.btn-icon.edit:hover { background-color: #e3f2fd; }
-.btn-icon.lock:hover { background-color: #fff3e0; }
-.btn-icon.delete:hover { background-color: #ffebee; }
+
+.btn-icon:hover {
+    background-color: #f0f0f0;
+    transform: scale(1.1);
+}
+
+.btn-icon.edit:hover {
+    background-color: #e3f2fd;
+}
+
+.btn-icon.lock:hover {
+    background-color: #fff3e0;
+}
+
+.btn-icon.delete:hover {
+    background-color: #ffebee;
+}
 
 /* Loading & Error */
-.loading-state, .empty-state-table {
+.loading-state,
+.empty-state-table {
     text-align: center;
-    padding: 50px;
+    padding: 40px 20px;
     color: var(--text-grey);
-    font-size: 1.1rem;
+}
+
+.empty-state-table div {
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+}
+
+.empty-state-table p {
+    margin: 0;
+    font-weight: 600;
+}
+
+.empty-state-table small {
+    display: block;
+    margin-top: 6px;
+    font-size: 0.85rem;
+    color: #9e9e9e;
 }
 
 .spinner {
@@ -458,7 +554,9 @@
 }
 
 @keyframes spin {
-    to { transform: rotate(360deg); }
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 .error-box {
@@ -486,12 +584,16 @@
    4. RESPONSIVE MEDIA QUERIES (GLOBAL)
    ========================================= */
 @media (max-width: 768px) {
-    .gestion-container, .gestion-usuarios-container {
+
+    .gestion-container,
+    .gestion-usuarios-container {
         padding: 15px;
     }
 
-    .gestion-header, .gestion-usuarios-container h2 {
-        text-align: center; /* Centrar títulos en móvil */
+    .gestion-header,
+    .gestion-usuarios-container h2 {
+        text-align: center;
+        /* Centrar títulos en móvil */
     }
 
     .gestion-header {
@@ -500,7 +602,8 @@
         padding: 20px;
     }
 
-    .btn-primary-action, .btn-create {
+    .btn-primary-action,
+    .btn-create {
         width: 100%;
         justify-content: center;
     }
@@ -509,9 +612,10 @@
         grid-template-columns: 1fr;
         gap: 15px;
     }
-    
+
     /* Ajustes específicos de Usuarios en móvil */
-    .styled-table td, .styled-table th {
+    .styled-table td,
+    .styled-table th {
         padding: 12px 10px;
     }
 }

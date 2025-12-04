@@ -1,5 +1,8 @@
 /* App.css (o index.css global) */
-* { box-sizing: border-box; }
+* {
+  font-family: Arial;
+  box-sizing: border-box; 
+}
 html {
   scroll-behavior: smooth;      /* scroll suave para anclas */
   scroll-padding-top: 80px;     /* espacio para cabecera sticky (ajusta si tu header es mayor) */

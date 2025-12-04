@@ -5,8 +5,12 @@ import "../styles/Hero.css";
 export default function Hero() {
   return (
     <section className="Fondo" id="inicio">
-      <div className="contenido-fondo">
-      </div>
+      <main className='contenido-fondo'>
+        <div className='content-wrapper'>
+          <div className='description-container'>
+          </div>
+        </div>
+      </main>
     </section>
   );
 }

@@ -48,10 +48,10 @@ export default function Header() {
         {/* Menú deslizable */}
         <div className={`nav-links-wrapper ${menuOpen ? 'open' : ''}`}>
           <div className="nav-links">
-            <a href="#nosotros" onClick={handleLinkClick}>Nosotros</a>
-            <a href="#programas" onClick={handleLinkClick}>Programas</a>
-            <a href="#contactanos" onClick={handleLinkClick}>Contáctanos</a>
-          </div>
+          <a className="other-page" href="#nosotros">Nosotros</a>
+          <a className="other-page" href="#programas">Programas</a>
+          <a className="other-page" href="#contactanos">Contáctanos</a>
+        </div>
         </div>
 
         {/* Botón de sesión (siempre visible) */}
